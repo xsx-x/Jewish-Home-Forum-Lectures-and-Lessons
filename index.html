@@ -271,8 +271,11 @@
                 if (item.type === "folder") {
                     const pathStr = item.pathArr ? item.pathArr.join('||') : item.name;
                     
+                    // התיקון הקריטי כאן: "הברחת" גרשיים כדי שלא ישברו את קוד הלחיצה
+                    const safePathStr = pathStr.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    
                     gridDiv.innerHTML += `
-                        <div onclick="jumpToFolderFromSearch('${pathStr}')" class="tile-card bg-slate-50 rounded-xl p-5 border border-slate-200 cursor-pointer flex flex-col items-center justify-center text-center aspect-[4/3] relative">
+                        <div onclick="jumpToFolderFromSearch('${safePathStr}')" class="tile-card bg-slate-50 rounded-xl p-5 border border-slate-200 cursor-pointer flex flex-col items-center justify-center text-center aspect-[4/3] relative">
                             <span class="text-5xl mb-3 drop-shadow-sm">📁</span>
                             <span class="font-bold text-slate-800 line-clamp-2">${item.name}</span>
                         </div>
