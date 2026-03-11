@@ -64,6 +64,17 @@
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 min-h-[400px]">
+                <!-- מתג תצוגה: תיקיות / מרצים -->
+                <div class="flex justify-center mb-6">
+                    <div class="bg-gray-100 p-1 rounded-lg inline-flex shadow-inner">
+                        <button onclick="switchViewMode('folders')" id="btnViewFolders" class="px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow">
+                            📁 לפי נושאים ותיקיות
+                        </button>
+                        <button onclick="switchViewMode('lecturers')" id="btnViewLecturers" class="px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700">
+                            👤 לפי רב / מרצה
+                        </button>
+                    </div>
+                </div>
                 <div id="breadcrumbsContainer" class="mb-6 pb-4 border-b border-gray-100 flex items-center gap-2 overflow-x-auto whitespace-nowrap breadcrumbs-scroll text-sm md:text-base">
                     טוען נתונים...
                 </div>
@@ -147,8 +158,10 @@
         // ==========================================
 
         let fileSystem = { name: "ראשי", type: "folder", children: {} };
+        let lecturerSystem = { name: "מרצים", type: "folder", children: {} }; // המערכת החדשה
         let currentPathArr = []; 
-        let allSearchableItems = []; 
+        let currentViewMode = 'folders'; // שומר את מצב התצוגה הנוכחי
+        let allSearchableItems = [];
 
 function switchTab(tabId) {
             // הסתרת כל הדפים
@@ -236,6 +249,13 @@ function switchTab(tabId) {
                 }
                 const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr, lecturer: lecturer };
                 currentNode.children[fileName] = fileObj;
+                // הוספת הקובץ גם לעץ המרצים (אם יש לו מרצה)
+                if (lecturer) {
+                    if (!lecturerSystem.children[lecturer]) {
+                        lecturerSystem.children[lecturer] = { name: lecturer, type: "folder", pathArr: [lecturer], lecturer: lecturer, children: {} };
+                    }
+                    lecturerSystem.children[lecturer].children[fileName] = fileObj;
+                }
                 allSearchableItems.push(fileObj);
             }
             
@@ -257,20 +277,40 @@ function switchTab(tabId) {
             renderCurrentFolder();
         }
 
+function switchViewMode(mode) {
+            currentViewMode = mode;
+            currentPathArr = []; // איפוס הנתיב בכל מעבר
+            clearSearch(false);
+            
+            // עדכון עיצוב הכפתורים
+            document.getElementById('btnViewFolders').className = mode === 'folders' ? "px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow" : "px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700";
+            document.getElementById('btnViewLecturers').className = mode === 'lecturers' ? "px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow" : "px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700";
+            
+            renderCurrentFolder();
+        }
+
         function renderCurrentFolder() {
-            let currentNode = fileSystem;
-            for (let folder of currentPathArr) { if(currentNode.children[folder]) currentNode = currentNode.children[folder]; }
+            // בוחרים את עץ הנתונים לפי המצב הנוכחי (תיקיות רגילות או מרצים)
+            let baseSystem = currentViewMode === 'folders' ? fileSystem : lecturerSystem;
+            let currentNode = baseSystem;
+            
+            for (let folder of currentPathArr) {
+                if(currentNode.children[folder]) currentNode = currentNode.children[folder];
+            }
             
             const breadcrumbsDiv = document.getElementById('breadcrumbsContainer');
-            let breadcrumbsHTML = `<button onclick="navigateTo(-1)" class="hover:text-blue-600 font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="text-lg">🏠</span> ראשי</button>`;
+            const homeText = currentViewMode === 'folders' ? "ראשי" : "כל המרצים";
+            
+            let breadcrumbsHTML = `<button onclick="navigateTo(-1)" class="hover:text-blue-600 font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="text-lg">${currentViewMode === 'folders' ? '🏠' : '👥'}</span> ${homeText}</button>`;
+            
             currentPathArr.forEach((folder, index) => {
                 breadcrumbsHTML += `<span class="text-gray-300 font-bold">/</span>`;
                 breadcrumbsHTML += `<button onclick="navigateTo(${index})" class="hover:text-blue-600 font-medium hover:bg-slate-50 px-2 py-1 rounded transition">${folder}</button>`;
             });
+            
             breadcrumbsDiv.innerHTML = breadcrumbsHTML;
             drawGrid(Object.values(currentNode.children));
         }
-
         function drawGrid(items) {
             const gridDiv = document.getElementById('explorerGrid');
             gridDiv.innerHTML = '';
