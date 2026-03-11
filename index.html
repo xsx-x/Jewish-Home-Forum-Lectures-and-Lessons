@@ -22,7 +22,6 @@
 </head>
 <body class="text-slate-800">
 
-    <!-- סרגל עליון -->
     <header class="bg-[#0f172a] text-white shadow-lg border-b-4 border-[#d4af37]">
         <div class="container mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center">
             <div class="text-center md:text-right mb-4 md:mb-0">
@@ -38,7 +37,6 @@
 
     <main class="container mx-auto px-4 py-8 flex-grow">
         
-        <!-- דף סייר השיעורים -->
         <div id="library" class="tab-content active">
             
             <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 mb-8 text-white shadow-md flex flex-col md:flex-row items-center justify-between border-r-4 border-[#d4af37]">
@@ -51,15 +49,15 @@
                 </button>
             </div>
 
-            <!-- אזור חיפוש וסינון רבנים -->
+            <!-- שורת חיפוש וסינון רבנים/מרצות -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-3">
                 <div class="relative flex-grow">
                     <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">🔍</span>
-                    <input type="text" id="searchInput" placeholder="חיפוש חופשי (שם רב, נושא, או שיעור)..." 
+                    <input type="text" id="searchInput" placeholder="חיפוש חופשי (שם רב/מרצה, נושא, או שיעור)..." 
                            class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none bg-gray-50 transition">
                 </div>
-                <select id="rabbiFilter" class="py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] outline-none bg-gray-50 min-w-[200px]">
-                    <option value="">כל הרבנים</option>
+                <select id="lecturerFilter" class="py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] outline-none bg-gray-50 min-w-[220px]">
+                    <option value="">כל הרבנים והמרצות</option>
                     <!-- יתמלא אוטומטית -->
                 </select>
             </div>
@@ -79,7 +77,6 @@
             </div>
         </div>
 
-        <!-- דף אודות והרשמה -->
         <div id="about" class="tab-content">
             <div class="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-100 max-w-4xl mx-auto">
                 <div class="text-center mb-10">
@@ -126,7 +123,7 @@
 
         let fileSystem = { name: "ראשי", type: "folder", children: {} };
         let currentPathArr = []; 
-        let allSearchableItems = []; // יכיל גם קבצים וגם תיקיות לטובת חיפוש
+        let allSearchableItems = []; 
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -156,10 +153,8 @@
             fileSystem.children = {}; 
             allSearchableItems = [];
             
-            // סט לשמירת שמות רבנים ייחודיים
-            let rabbisSet = new Set();
+            let lecturersSet = new Set();
 
-            // מעבר על השורות. אינדקס 5 הוא שם הרב
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i].trim()) continue;
                 
@@ -169,12 +164,11 @@
                 const type = row[2] ? row[2].replace(/"/g, '').trim() : '';
                 const link = row[3] ? row[3].replace(/"/g, '').trim() : '';
                 const access = row[4] ? row[4].replace(/"/g, '').trim() : '';
-                const rabbi = row[5] ? row[5].replace(/"/g, '').trim() : '';
+                const lecturer = row[5] ? row[5].replace(/"/g, '').trim() : '';
                 
                 if(!pathStr || !fileName) continue;
-                if(rabbi) rabbisSet.add(rabbi);
+                if(lecturer) lecturersSet.add(lecturer);
 
-                // בניית עץ התיקיות
                 const folders = pathStr.split('/');
                 let currentNode = fileSystem;
                 let currentPathBuild = [];
@@ -190,35 +184,34 @@
                         const newFolder = { 
                             name: folderName, 
                             type: "folder", 
-                            pathArr: [...currentPathBuild], // שומר את הנתיב כדי שאפשר יהיה לקפוץ אליו מהחיפוש
-                            rabbi: rabbi,
+                            pathArr: [...currentPathBuild], 
+                            lecturer: lecturer,
                             children: {} 
                         };
                         currentNode.children[folderName] = newFolder;
                         
-                        // נוסיף את התיקייה עצמה למאגר החיפוש רק פעם אחת
                         const exists = allSearchableItems.find(item => item.type === "folder" && item.pathArr.join('/') === newFolder.pathArr.join('/'));
                         if(!exists) allSearchableItems.push(newFolder);
                     }
                     currentNode = currentNode.children[folderName];
                 }
                 
-                // הוספת הקובץ
-                const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr, rabbi: rabbi };
+                const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr, lecturer: lecturer };
                 currentNode.children[fileName] = fileObj;
                 allSearchableItems.push(fileObj);
             }
             
-            // מילוי תיבת הסינון ברבנים
-            const rabbiSelect = document.getElementById('rabbiFilter');
-            rabbisSet.forEach(r => {
-                rabbiSelect.innerHTML += `<option value="${r}">${r}</option>`;
+            const lecturerSelect = document.getElementById('lecturerFilter');
+            
+            // סידור שמות המרצים בסדר אלפביתי
+            const sortedLecturers = Array.from(lecturersSet).sort();
+            sortedLecturers.forEach(l => {
+                lecturerSelect.innerHTML += `<option value="${l}">${l}</option>`;
             });
 
             renderCurrentFolder();
         }
 
-        // ניווט רגיל
         function navigateTo(index) {
             clearSearch(false);
             if (index === -1) currentPathArr = []; 
@@ -231,10 +224,8 @@
             renderCurrentFolder();
         }
 
-        // פונקציה מיוחדת לקפיצה לתיקייה מתוך תוצאות החיפוש
         function jumpToFolderFromSearch(pathString) {
             const pathArray = pathString.split('||');
-            // מסירים את המילה "ראשי" כי המערכת מניחה אותה כברירת מחדל
             if(pathArray[0] === "ראשי") pathArray.shift(); 
             
             currentPathArr = pathArray;
@@ -270,7 +261,6 @@
                 return;
             }
 
-            // סידור: תיקיות קודם, ואז קבצים בסדר אלפביתי
             items.sort((a, b) => {
                 if (a.type === "folder" && b.type !== "folder") return -1;
                 if (a.type !== "folder" && b.type === "folder") return 1;
@@ -279,7 +269,6 @@
 
             items.forEach(item => {
                 if (item.type === "folder") {
-                    // המרה של מערך הנתיב למחרוזת כדי להעביר אותו לכפתור
                     const pathStr = item.pathArr ? item.pathArr.join('||') : item.name;
                     
                     gridDiv.innerHTML += `
@@ -323,12 +312,12 @@
 
         function handleSearch() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            const selectedRabbi = document.getElementById('rabbiFilter').value;
+            const selectedLecturer = document.getElementById('lecturerFilter').value;
 
             const breadcrumbs = document.getElementById('breadcrumbsContainer');
             const searchHeader = document.getElementById('searchResultsHeader');
 
-            if (searchTerm === "" && selectedRabbi === "") {
+            if (searchTerm === "" && selectedLecturer === "") {
                 breadcrumbs.classList.remove('hidden');
                 searchHeader.classList.add('hidden');
                 renderCurrentFolder();
@@ -341,8 +330,8 @@
             const results = allSearchableItems.filter(item => {
                 const searchString = item.type === "folder" ? item.name : (item.name + " " + item.path);
                 const matchName = searchString.toLowerCase().includes(searchTerm);
-                const matchRabbi = selectedRabbi === "" || (item.rabbi && item.rabbi === selectedRabbi);
-                return matchName && matchRabbi;
+                const matchLecturer = selectedLecturer === "" || (item.lecturer && item.lecturer === selectedLecturer);
+                return matchName && matchLecturer;
             });
 
             document.getElementById('searchCount').innerText = `${results.length} תוצאות נמצאו`;
@@ -351,14 +340,14 @@
 
         function clearSearch(render = true) {
             document.getElementById('searchInput').value = "";
-            document.getElementById('rabbiFilter').value = "";
+            document.getElementById('lecturerFilter').value = "";
             document.getElementById('breadcrumbsContainer').classList.remove('hidden');
             document.getElementById('searchResultsHeader').classList.add('hidden');
             if(render) renderCurrentFolder();
         }
 
         document.getElementById('searchInput').addEventListener('input', handleSearch);
-        document.getElementById('rabbiFilter').addEventListener('change', handleSearch);
+        document.getElementById('lecturerFilter').addEventListener('change', handleSearch);
 
         fetchDriveData();
     </script>
