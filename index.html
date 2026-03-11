@@ -150,7 +150,7 @@
         // ==========================================
         // הדבק כאן את הקישור מפרסום האקסל (CSV)
         // ==========================================
-        const SHEET_CSV_URL = 'כאן_מדביקים_את_הקישור_מגוגל_שיטס';
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?output=csv';        
         
         let fileSystem = { name: "ראשי", type: "folder", children: {} };
         let currentPathArr = []; 
@@ -171,8 +171,7 @@
 
         // טעינת הנתונים
         async function fetchDriveData() {
-            if(SHEET_CSV_URL === '        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?output=csv';        
-') {
+            if(SHEET_CSV_URL === 'כאן_מדביקים_את_הקישור_מגוגל_שיטס') {
                 document.getElementById('breadcrumbsContainer').innerHTML = '<span class="text-red-500 font-bold px-4 py-2 bg-red-50 rounded">שגיאה: חסר קישור CSV בקוד האתר.</span>';
                 return;
             }
