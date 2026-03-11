@@ -29,6 +29,24 @@
             background-attachment: fixed;
             animation: animate-background 90s linear infinite;
         }
+        /* ============== עיצוב סרט נע לחדשים ============== */
+        @keyframes scroll-left {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); } /* זז עד לסוף העותק הראשון */
+        }
+        .carousel-track {
+            animation: scroll-left 40s linear infinite;
+        }
+        .carousel-container:hover .carousel-track {
+            animation-play-state: paused;
+        }
+        input:checked ~ .dot {
+            transform: translateX(100%);
+            background-color: var(--accent-gold);
+        }
+        input:checked ~ .block {
+            background-color: #0f172a;
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -52,6 +70,17 @@
         
         <!-- ================= דף סייר השיעורים ================= -->
         <div id="library" class="tab-content active">
+            <!-- ================ סרט נע: הועלו לאחרונה ================ -->
+            <div id="newItemsContainer" class="mb-8 hidden">
+                <h3 class="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2">
+                    <span class="text-2xl animate-pulse">🌟</span> הועלו לאחרונה
+                </h3>
+                <div class="carousel-container relative w-full overflow-hidden mask-gradient py-2">
+                    <div id="carouselTrack" class="flex">
+                        <!-- יתמלא אוטומטית -->
+                    </div>
+                </div>
+            </div>
             
             <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 mb-8 text-white shadow-md flex flex-col md:flex-row items-center justify-between border-r-4 border-[#d4af37]">
                 <div class="mb-4 md:mb-0">
@@ -72,6 +101,15 @@
                 <select id="lecturerFilter" class="py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] outline-none bg-gray-50 min-w-[220px]">
                     <option value="">כל הרבנים והמרצים</option>
                 </select>
+                <!-- מתג סינון לחדשים -->
+                <label for="newFilterToggle" class="flex items-center cursor-pointer select-none">
+                    <span class="mr-3 text-sm font-medium text-gray-700">🌟 הצג חדשים בלבד</span>
+                    <div class="relative">
+                        <input type="checkbox" id="newFilterToggle" class="sr-only">
+                        <div class="block bg-gray-200 w-14 h-8 rounded-full"></div>
+                        <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+                    </div>
+                </label>
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 min-h-[400px]">
@@ -169,13 +207,14 @@
         // ==========================================
 
 
+        // הגדרת משתנים גלובליים
         let fileSystem = { name: "ראשי", type: "folder", children: {} };
         let lecturerSystem = { name: "מרצים", type: "folder", children: {} };
         let currentPathArr = []; 
         let currentViewMode = 'folders'; 
         let allSearchableItems = []; 
 
-        // ==================== פונקציות עיצוב וטעינה ====================
+        // ==================== פונקציות בסיסיות של הממשק (UI) ====================
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
@@ -188,24 +227,10 @@
             });
         }
 
-        // שלדי טעינה (Skeleton Loaders) שמופיעים לפני שהנתונים מגיעים
         function showSkeletons() {
             const grid = document.getElementById('explorerGrid');
-            grid.innerHTML = Array(10).fill().map(() => `
-                <div class="tile-card bg-white rounded-xl border border-gray-100 p-5 aspect-[4/3] flex flex-col items-center justify-center animate-pulse">
-                    <div class="w-16 h-16 bg-slate-200 rounded-full mb-4"></div>
-                    <div class="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
-                    <div class="h-3 bg-slate-200 rounded w-1/2"></div>
-                </div>
-            `).join('');
-
-            document.getElementById('scheduleContainer').innerHTML = Array(3).fill().map(() => `
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-pulse mb-6">
-                    <div class="h-6 bg-slate-200 rounded w-1/3 mb-6"></div>
-                    <div class="h-16 bg-slate-100 rounded mb-3"></div>
-                    <div class="h-16 bg-slate-100 rounded"></div>
-                </div>
-            `).join('');
+            grid.innerHTML = Array(10).fill().map(() => `<div class="tile-card bg-white rounded-xl border border-gray-100 p-5 aspect-[4/3] flex flex-col items-center justify-center animate-pulse"><div class="w-16 h-16 bg-slate-200 rounded-full mb-4"></div><div class="h-4 bg-slate-200 rounded w-3/4 mb-2"></div><div class="h-3 bg-slate-200 rounded w-1/2"></div></div>`).join('');
+            document.getElementById('scheduleContainer').innerHTML = Array(3).fill().map(() => `<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-pulse mb-6"><div class="h-6 bg-slate-200 rounded w-1/3 mb-6"></div><div class="h-16 bg-slate-100 rounded mb-3"></div><div class="h-16 bg-slate-100 rounded"></div></div>`).join('');
         }
 
         function switchViewMode(mode) {
@@ -226,7 +251,7 @@
                 const response = await fetch(EXPLORER_CSV_URL);
                 const data = await response.text();
                 buildFileSystem(data);
-            } catch (error) { console.error(error); }
+            } catch (error) { console.error("שגיאה בסייר הקבצים:", error); }
         }
 
         function buildFileSystem(csvText) {
@@ -235,6 +260,7 @@
             lecturerSystem.children = {};
             allSearchableItems = [];
             let lecturersSet = new Set();
+            const today = new Date();
             
             document.getElementById('lecturerFilter').innerHTML = '<option value="">כל הרבנים והמרצות</option>';
 
@@ -248,15 +274,20 @@
                 const link = row[3] ? row[3].replace(/"/g, '').trim() : '';
                 const access = row[4] ? row[4].replace(/"/g, '').trim() : 'פתוח';
                 const lecturer = row[5] ? row[5].replace(/"/g, '').trim() : '';
-                const creationDate = row[6] ? row[6].replace(/"/g, '').trim() : ''; // שאיבת התאריך החדש
+                const creationDate = row[6] ? row[6].replace(/"/g, '').trim() : '';
                 
                 if(!pathStr || !fileName) continue;
                 if(lecturer) lecturersSet.add(lecturer);
 
-                const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr, lecturer: lecturer, date: creationDate };
-                allSearchableItems.push(fileObj);
+                let isNew = false;
+                if(creationDate) {
+                    const fileDate = new Date(creationDate);
+                    const diffDays = Math.ceil(Math.abs(today - fileDate) / (1000 * 60 * 60 * 24));
+                    if(diffDays <= 14) isNew = true;
+                }
 
-                // 1. בניית עץ התיקיות הרגיל
+                const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr, lecturer: lecturer, date: creationDate, isNew: isNew };
+                
                 const folders = pathStr.split('/');
                 let currentNode = fileSystem;
                 let currentPathBuild = [];
@@ -267,13 +298,13 @@
                     let folderName = folders[j];
                     currentPathBuild.push(folderName);
                     if (!currentNode.children[folderName]) {
-                        currentNode.children[folderName] = { name: folderName, type: "folder", pathArr: [...currentPathBuild], children: {} };
+                        const newFolder = { name: folderName, type: "folder", pathArr: [...currentPathBuild], children: {} };
+                        currentNode.children[folderName] = newFolder;
                     }
                     currentNode = currentNode.children[folderName];
                 }
                 currentNode.children[fileName] = fileObj;
 
-                // 2. בניית עץ המרצים (רק אם יש מרצה)
                 if (lecturer) {
                     if (!lecturerSystem.children[lecturer]) {
                         lecturerSystem.children[lecturer] = { name: lecturer, type: "folder", pathArr: [lecturer], children: {} };
@@ -282,22 +313,45 @@
                 }
             }
             
+            // איסוף כל הפריטים (תיקיות וקבצים) למערך חיפוש אחד
+            function collectAllItems(node, collection) {
+                for (const key in node.children) {
+                    const child = node.children[key];
+                    collection.push(child);
+                    if (child.type === "folder") {
+                        collectAllItems(child, collection);
+                    }
+                }
+            }
+            collectAllItems(fileSystem, allSearchableItems);
+            
             Array.from(lecturersSet).sort().forEach(l => { document.getElementById('lecturerFilter').innerHTML += `<option value="${l}">${l}</option>`; });
             
-            // מוסיף את כפתורי הפיצול ל-HTML אם הם לא קיימים (במקום שתערוך את ה-HTML למעלה)
-            if(!document.getElementById('btnViewFolders')) {
-                const breadcrumbs = document.getElementById('breadcrumbsContainer');
-                breadcrumbs.insertAdjacentHTML('beforebegin', `
-                    <div class="flex justify-center mb-6">
-                        <div class="bg-gray-100 p-1 rounded-lg inline-flex shadow-inner">
-                            <button onclick="switchViewMode('folders')" id="btnViewFolders" class="px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow">📁 לפי נושאים ותיקיות</button>
-                            <button onclick="switchViewMode('lecturers')" id="btnViewLecturers" class="px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700">👤 לפי רב / מרצה</button>
-                        </div>
-                    </div>
-                `);
-            }
-            
+            renderCarousel();
             renderCurrentFolder();
+        }
+        
+        function renderCarousel() {
+            const container = document.getElementById('newItemsContainer');
+            const track = document.getElementById('carouselTrack');
+            
+            const newItems = allSearchableItems
+                .filter(item => item.isNew && item.type !== 'folder')
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 8); 
+
+            if (newItems.length > 0) {
+                container.classList.remove('hidden');
+                
+                const itemsToRender = [...newItems, ...newItems];
+                let carouselHTML = '';
+
+                itemsToRender.forEach(item => {
+                    let icon = "📄"; if(item.type === "וידאו") icon = "🎥"; if(item.type === "שמע") icon = "🎧";
+                    carouselHTML += `<a href="${item.link}" target="_blank" class="flex-shrink-0 w-48 mx-2 bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center gap-3 transition-transform duration-300 hover:scale-105 hover:shadow-lg"><div class="text-3xl">${icon}</div><div class="overflow-hidden"><h4 class="text-xs font-bold text-slate-800 truncate">${item.name}</h4><p class="text-[10px] text-gray-500 truncate">${item.lecturer || 'שיעור כללי'}</p></div></a>`;
+                });
+                track.innerHTML = carouselHTML;
+            }
         }
 
         function navigateTo(index) {
@@ -309,35 +363,24 @@
         function jumpToFolderFromSearch(pathString) {
             const pathArray = pathString.split('||');
             
-            // זיהוי אם התיקייה שייכת לסייר הנושאים או לסייר המרצים
             if(pathArray[0] === "ראשי") {
                 currentViewMode = 'folders';
-                pathArray.shift(); // מסיר את "ראשי" מהנתיב הפנימי כדי למנוע כפילויות
+                pathArray.shift();
             } else {
                 currentViewMode = 'lecturers';
             }
 
-            // עדכון הנתיב אליו אנחנו נכנסים
             currentPathArr = pathArray;
-
-            // עדכון עיצוב הכפתורים למעלה (מבלי לאפס את הנתיב!)
             document.getElementById('btnViewFolders').className = currentViewMode === 'folders' ? "px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow" : "px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700";
             document.getElementById('btnViewLecturers').className = currentViewMode === 'lecturers' ? "px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow" : "px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700";
 
-            // ניקוי החיפוש אם הגענו משורת החיפוש
-            document.getElementById('searchInput').value = "";
-            document.getElementById('lecturerFilter').value = "";
-            document.getElementById('breadcrumbsContainer').classList.remove('hidden');
-            document.getElementById('searchResultsHeader').classList.add('hidden');
-
-            // ציור התיקייה
+            clearSearch(false);
             renderCurrentFolder();
         }
 
         function renderCurrentFolder() {
             let baseSystem = currentViewMode === 'folders' ? fileSystem : lecturerSystem;
             let currentNode = baseSystem;
-            
             for (let folder of currentPathArr) { if(currentNode.children[folder]) currentNode = currentNode.children[folder]; }
             
             const breadcrumbsDiv = document.getElementById('breadcrumbsContainer');
@@ -347,8 +390,7 @@
             let breadcrumbsHTML = `<button onclick="navigateTo(-1)" class="hover:text-blue-600 font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="text-lg">${homeIcon}</span> ${homeText}</button>`;
             
             currentPathArr.forEach((folder, index) => {
-                breadcrumbsHTML += `<span class="text-gray-300 font-bold">/</span>`;
-                breadcrumbsHTML += `<button onclick="navigateTo(${index})" class="hover:text-blue-600 font-medium hover:bg-slate-50 px-2 py-1 rounded transition">${folder}</button>`;
+                breadcrumbsHTML += `<span class="text-gray-300 font-bold">/</span><button onclick="navigateTo(${index})" class="hover:text-blue-600 font-medium hover:bg-slate-50 px-2 py-1 rounded transition">${folder}</button>`;
             });
             breadcrumbsDiv.innerHTML = breadcrumbsHTML;
             drawGrid(Object.values(currentNode.children));
@@ -356,8 +398,11 @@
 
         function drawGrid(items) {
             const gridDiv = document.getElementById('explorerGrid');
+            const showNewOnly = document.getElementById('newFilterToggle').checked;
+            if (showNewOnly) { items = items.filter(item => item.isNew || item.type === 'folder'); }
+            
             gridDiv.innerHTML = '';
-            if (items.length === 0) { gridDiv.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 font-medium text-lg">אין קבצים או תיקיות תואמים.</div>'; return; }
+            if (items.length === 0) { gridDiv.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 font-medium text-lg">לא נמצאו פריטים תואמים.</div>'; return; }
             
             items.sort((a, b) => {
                 if (a.type === "folder" && b.type !== "folder") return -1;
@@ -365,23 +410,13 @@
                 return a.name.localeCompare(b.name);
             });
 
-            const today = new Date();
-
             items.forEach(item => {
                 if (item.type === "folder") {
                     const pathStr = item.pathArr ? item.pathArr.join('||') : item.name;
                     const safePathStr = pathStr.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                    
                     const itemCount = Object.keys(item.children || {}).length;
                     const itemText = itemCount === 1 ? '1 פריט' : `${itemCount} פריטים`;
-
-                    gridDiv.innerHTML += `
-                        <div onclick="jumpToFolderFromSearch('${safePathStr}')" class="tile-card bg-slate-50 rounded-xl p-5 border border-slate-200 cursor-pointer flex flex-col items-center justify-center text-center aspect-[4/3] relative hover:bg-white">
-                            <span class="text-5xl mb-2 drop-shadow-sm">📁</span>
-                            <span class="font-bold text-slate-800 line-clamp-2">${item.name}</span>
-                            <span class="text-xs text-gray-400 mt-2 bg-gray-200 px-2 py-1 rounded-full">${itemText}</span>
-                        </div>
-                    `;
+                    gridDiv.innerHTML += `<div onclick="jumpToFolderFromSearch('${safePathStr}')" class="tile-card bg-slate-50 rounded-xl p-5 border border-slate-200 cursor-pointer flex flex-col items-center justify-center text-center aspect-[4/3] relative hover:bg-white"><span class="text-5xl mb-2 drop-shadow-sm">📁</span><span class="font-bold text-slate-800 line-clamp-2">${item.name}</span><span class="text-xs text-gray-400 mt-2 bg-gray-200 px-2 py-1 rounded-full">${itemText}</span></div>`;
                 } else {
                     let icon = "📄"; let iconColor = "text-gray-500"; let bgColor = "bg-gray-50";
                     if(item.type === "וידאו") { icon = "🎥"; iconColor = "text-blue-600"; bgColor = "bg-blue-50"; }
@@ -390,27 +425,9 @@
                     const safeAccess = item.access || "";
                     const isPremium = safeAccess.includes('מנויים');
                     const badgeClass = isPremium ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-green-100 text-green-800 border-green-200";
+                    const newBadgeHTML = item.isNew ? `<div class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md z-10 animate-bounce">🌟 חדש!</div>` : '';
                     
-                    let isNew = false;
-                    if(item.date) {
-                        const fileDate = new Date(item.date);
-                        const diffDays = Math.ceil(Math.abs(today - fileDate) / (1000 * 60 * 60 * 24));
-                        if(diffDays <= 14) isNew = true;
-                    }
-                    const newBadgeHTML = isNew ? `<div class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md z-10 animate-bounce">🌟 חדש!</div>` : '';
-
-                    // *** התיקון הקריטי כאן: הורדנו את overflow-hidden מהכרטיסייה ***
-                    gridDiv.innerHTML += `
-                        <a href="${item.link}" target="_blank" class="tile-card bg-white rounded-xl border border-gray-200 cursor-pointer flex flex-col relative h-full">
-                            ${newBadgeHTML}
-                            <div class="h-2 w-full ${isPremium ? 'bg-[#0f172a]' : 'bg-[#d4af37]'}"></div>
-                            <div class="absolute top-3 right-3 border ${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">${isPremium ? "🔒 מנויים" : "🔓 פתוח"}</div>
-                            <div class="p-5 flex flex-col items-center flex-grow justify-center text-center mt-4">
-                                <div class="w-16 h-16 rounded-full ${bgColor} flex items-center justify-center mb-4 shadow-sm"><span class="text-3xl ${iconColor}">${icon}</span></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2">${item.name}</h3>
-                            </div>
-                        </a>
-                    `;
+                    gridDiv.innerHTML += `<a href="${item.link}" target="_blank" class="tile-card bg-white rounded-xl border border-gray-200 cursor-pointer flex flex-col relative h-full">${newBadgeHTML}<div class="h-2 w-full ${isPremium ? 'bg-[#0f172a]' : 'bg-[#d4af37]'}"></div><div class="absolute top-3 right-3 border ${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">${isPremium ? "🔒 מנויים" : "🔓 פתוח"}</div><div class="p-5 flex flex-col items-center flex-grow justify-center text-center mt-4"><div class="w-16 h-16 rounded-full ${bgColor} flex items-center justify-center mb-4 shadow-sm"><span class="text-3xl ${iconColor}">${icon}</span></div><h3 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2">${item.name}</h3></div></a>`;
                 }
             });
         }
@@ -418,11 +435,13 @@
         function handleSearch() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             const selectedLecturer = document.getElementById('lecturerFilter').value;
+            const showNewOnly = document.getElementById('newFilterToggle').checked;
             const breadcrumbs = document.getElementById('breadcrumbsContainer');
             const searchHeader = document.getElementById('searchResultsHeader');
 
-            if (searchTerm === "" && selectedLecturer === "") {
-                breadcrumbs.classList.remove('hidden'); searchHeader.classList.add('hidden'); renderCurrentFolder(); return;
+            if (searchTerm === "" && selectedLecturer === "" && !showNewOnly) {
+                breadcrumbs.classList.remove('hidden'); searchHeader.classList.add('hidden');
+                renderCurrentFolder(); return;
             }
             breadcrumbs.classList.add('hidden'); searchHeader.classList.remove('hidden');
 
@@ -431,29 +450,34 @@
                 const searchString = item.type === "folder" ? item.name : (item.name + " " + safePath);
                 const matchName = searchString.toLowerCase().includes(searchTerm);
                 const matchLecturer = selectedLecturer === "" || (item.lecturer && item.lecturer === selectedLecturer);
-                return matchName && matchLecturer;
+                const matchNew = !showNewOnly || (item.isNew && item.type !== 'folder');
+                return matchName && matchLecturer && matchNew;
             });
             document.getElementById('searchCount').innerText = `${results.length} תוצאות נמצאו`;
             drawGrid(results);
         }
 
         function clearSearch(render = true) {
-            document.getElementById('searchInput').value = ""; document.getElementById('lecturerFilter').value = "";
-            document.getElementById('breadcrumbsContainer').classList.remove('hidden'); document.getElementById('searchResultsHeader').classList.add('hidden');
+            document.getElementById('searchInput').value = "";
+            document.getElementById('lecturerFilter').value = "";
+            document.getElementById('newFilterToggle').checked = false;
+            document.getElementById('breadcrumbsContainer').classList.remove('hidden');
+            document.getElementById('searchResultsHeader').classList.add('hidden');
             if(render) renderCurrentFolder();
         }
 
         document.getElementById('searchInput').addEventListener('input', handleSearch);
         document.getElementById('lecturerFilter').addEventListener('change', handleSearch);
+        document.getElementById('newFilterToggle').addEventListener('change', handleSearch);
 
-        // ==================== לוגיקת לוח השיעורים (כולל התיקון הקריטי לבאג הגרש) ====================
+        // ==================== לוגיקת לוח השיעורים ====================
         async function fetchScheduleData() {
             if(SCHEDULE_CSV_URL.includes('הכנס_את_הקישור')) return;
             try {
                 const response = await fetch(SCHEDULE_CSV_URL);
                 const data = await response.text();
                 parseAndRenderSchedule(data);
-            } catch (error) { console.error(error); }
+            } catch (error) { console.error("שגיאה בלוח הזמנים:", error); }
         }
 
         function parseAndRenderSchedule(csvText) {
@@ -472,14 +496,8 @@
                 
                 if(!rawDate) continue;
 
-                // *** תיקון הבאג: נרמול התאריך! ***
-                // אנו מסירים גרשיים ורווחים כפולים כדי שהמערכת תתייחס ל-"ה' אייר" ול-"ה אייר" כאל אותו יום בדיוק.
                 let normalizedDateKey = rawDate.replace(/'/g, '').replace(/"/g, '').replace(/\s+/g, ' ').trim();
-
-                // שומרים את השם המקורי לתצוגה, אבל משתמשים בשם המנורמל לאיחוד השורות
-                if(!groupedSchedule[normalizedDateKey]) {
-                    groupedSchedule[normalizedDateKey] = { displayName: rawDate, events: [] };
-                }
+                if(!groupedSchedule[normalizedDateKey]) { groupedSchedule[normalizedDateKey] = { displayName: rawDate, events: [] }; }
                 groupedSchedule[normalizedDateKey].events.push({ time, lecturer, topic, audience });
             }
 
@@ -492,52 +510,23 @@
                 dayData.events.forEach(ev => {
                     const safeTopic = ev.topic || "";
                     if(safeTopic.includes('הפסקה')) {
-                        eventsHTML += `
-                            <div class="flex items-center gap-4 bg-slate-100 p-3 rounded-lg border border-slate-200 opacity-80">
-                                <span class="font-bold text-slate-500 min-w-[50px] text-left" dir="ltr">${ev.time}</span>
-                                <div class="w-px h-6 bg-slate-300"></div>
-                                <span class="font-bold text-slate-500 flex-grow text-center">☕ הפסקה</span>
-                            </div>
-                        `;
+                        eventsHTML += `<div class="flex items-center gap-4 bg-slate-100 p-3 rounded-lg border border-slate-200 opacity-80"><span class="font-bold text-slate-500 min-w-[50px] text-left" dir="ltr">${ev.time}</span><div class="w-px h-6 bg-slate-300"></div><span class="font-bold text-slate-500 flex-grow text-center">☕ הפסקה</span></div>`;
                     } else {
                         let badgeColor = "bg-gray-100 text-gray-800";
                         if(ev.audience === "זוגי") badgeColor = "bg-purple-100 text-purple-800 border-purple-200";
                         if(ev.audience === "נשים") badgeColor = "bg-pink-100 text-pink-800 border-pink-200";
                         if(ev.audience === "גברים") badgeColor = "bg-teal-100 text-teal-800 border-teal-200";
-
-                        eventsHTML += `
-                            <div class="flex flex-col sm:flex-row sm:items-center gap-4 bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition">
-                                <span class="font-bold text-[#d4af37] min-w-[50px] text-xl" dir="ltr">${ev.time}</span>
-                                <div class="hidden sm:block w-px h-10 bg-gray-200"></div>
-                                <div class="flex-grow">
-                                    <h4 class="font-bold text-lg text-slate-800">${ev.topic}</h4>
-                                    <p class="text-sm text-gray-500 flex items-center gap-1 mt-1">👤 ${ev.lecturer}</p>
-                                </div>
-                                <span class="border ${badgeColor} text-xs font-bold px-3 py-1 rounded-full text-center whitespace-nowrap self-start sm:self-center">
-                                    ${ev.audience}
-                                </span>
-                            </div>
-                        `;
+                        eventsHTML += `<div class="flex flex-col sm:flex-row sm:items-center gap-4 bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition"><span class="font-bold text-[#d4af37] min-w-[50px] text-xl" dir="ltr">${ev.time}</span><div class="hidden sm:block w-px h-10 bg-gray-200"></div><div class="flex-grow"><h4 class="font-bold text-lg text-slate-800">${ev.topic}</h4><p class="text-sm text-gray-500 flex items-center gap-1 mt-1">👤 ${ev.lecturer}</p></div><span class="border ${badgeColor} text-xs font-bold px-3 py-1 rounded-full text-center whitespace-nowrap self-start sm:self-center">${ev.audience}</span></div>`;
                     }
                 });
-
-                container.innerHTML += `
-                    <div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
-                        <div class="bg-[#0f172a] text-[#d4af37] px-6 py-4 border-b-4 border-[#d4af37]">
-                            <h3 class="text-xl font-bold flex items-center gap-2">📅 ${dayData.displayName}</h3>
-                        </div>
-                        <div class="p-6 space-y-3 bg-gray-50">
-                            ${eventsHTML}
-                        </div>
-                    </div>
-                `;
+                container.innerHTML += `<div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden"><div class="bg-[#0f172a] text-[#d4af37] px-6 py-4 border-b-4 border-[#d4af37]"><h3 class="text-xl font-bold flex items-center gap-2">📅 ${dayData.displayName}</h3></div><div class="p-6 space-y-3 bg-gray-50">${eventsHTML}</div></div>`;
             }
         }
 
         // ==================== הפעלת האתר ====================
         document.addEventListener('DOMContentLoaded', () => {
             switchTab('library');
-            showSkeletons(); // מפעיל את האנימציות לפני שרת הנתונים חזר!
+            showSkeletons();
             fetchExplorerData();
             fetchScheduleData();
         });
