@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פורום הבית היהודי - ספריית שיעורים</title>
+    <!-- שימוש ב-Tailwind CSS לעיצוב מודרני בלי קבצים נוספים -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* הגדרות צבעים ואנימציות תורניות-מודרניות */
+        :root {
+            --primary-dark: #0f172a; /* כחול עמוק */
+            --accent-gold: #d4af37; /* צבע זהב */
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
+        .tab-content { display: none; animation: fadeIn 0.5s ease-in-out; }
+        .tab-content.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .lesson-card {
+            transition: all 0.3s ease;
+        }
+        .lesson-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border-color: var(--accent-gold);
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- סרגל עליון -->
+    <header class="bg-[#0f172a] text-white shadow-lg border-b-4 border-[#d4af37]">
+        <div class="container mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center">
+            <div class="text-center md:text-right mb-4 md:mb-0">
+                <h1 class="text-3xl font-bold text-[#d4af37]">פורום הבית היהודי</h1>
+                <p class="text-sm text-gray-300 mt-1">בנשיאות הרה"ג ר' עמרם פריד שליט"א</p>
+            </div>
+            <nav class="flex space-x-4 space-x-reverse">
+                <button onclick="switchTab('library')" class="nav-btn px-4 py-2 rounded-md hover:bg-slate-700 transition font-medium text-[#d4af37]">ספריית שיעורים</button>
+                <button onclick="switchTab('about')" class="nav-btn px-4 py-2 rounded-md hover:bg-slate-700 transition font-medium">אודות והרשמה</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        
+        <!-- דף ספריית השיעורים -->
+        <div id="library" class="tab-content active">
+            <!-- אזור חיפוש וסינון -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8 flex flex-col md:flex-row gap-4">
+                <input type="text" id="searchInput" placeholder="חיפוש חופשי לפי שם שיעור..." class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4af37]">
+                
+                <select id="rabbiFilter" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4af37] bg-white">
+                    <option value="">כל הרבנים</option>
+                    <!-- יתמלא אוטומטית -->
+                </select>
+
+                <select id="subjectFilter" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4af37] bg-white">
+                    <option value="">כל הנושאים</option>
+                    <!-- יתמלא אוטומטית -->
+                </select>
+            </div>
+
+            <!-- תצוגת השיעורים (רשת) -->
+            <div id="lessonsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="text-center col-span-full py-10 text-gray-500">טוען שיעורים...</div>
+            </div>
+        </div>
+
+        <!-- דף אודות והרשמה -->
+        <div id="about" class="tab-content">
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold text-[#0f172a] mb-6 border-b-2 border-[#d4af37] inline-block pb-2">אודות פורום הבית היהודי</h2>
+                <div class="prose prose-lg text-gray-700 space-y-4">
+                    <p>ברוכים הבאים למערכת השיעורים של פורום הבית היהודי, העומד בנשיאותו של <strong>הרה"ג ר' עמרם פריד שליט"א</strong>.</p>
+                    <p>באתר זה תמצאו מאגר עשיר של הרצאות, שיעורים וסיכומים במגוון נושאים הנוגעים לבנין הבית היהודי, הלכה, מוסר והשקפה.</p>
+                    
+                    <h3 class="text-xl font-bold text-[#0f172a] mt-8">איך מצטרפים?</h3>
+                    <p>חלק מהשיעורים פתוחים לקהל הרחב לזיכוי הרבים. הגישה למאגר המלא פתוחה למנויי הפורום בלבד.</p>
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200 mt-4">
+                        <h4 class="font-bold text-lg mb-2">מסלול מנויים:</h4>
+                        <ul class="list-disc list-inside space-y-2 mb-4">
+                            <li>גישה חופשית לכל שיעורי הוידאו והשמע</li>
+                            <li>גישה למאמרי סיכום כתובים</li>
+                            <li>אפשרות לשאול שאלות</li>
+                        </ul>
+                        <p class="font-bold">עלות המנוי: X ש"ח לחודש</p>
+                        <!-- כפתור יצירת קשר / תשלום -->
+                        <a href="#" class="mt-4 inline-block bg-[#d4af37] hover:bg-[#b5952f] text-[#0f172a] font-bold py-3 px-6 rounded-lg transition duration-300">
+                            להצטרפות ותשלום מאובטח לחץ כאן
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // הדבק כאן את הקישור שקיבלת מגוגל שיטס (קובץ ה-CSV)
+        // ==========================================
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?output=csv';
+        
+        let allLessons = [];
+
+        // פונקציה למעבר בין דפים
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('text-[#d4af37]'));
+            event.target.classList.add('text-[#d4af37]');
+        }
+
+        // פונקציה שמביאה את הנתונים מגוגל שיטס
+        async function fetchLessons() {
+            if(SHEET_CSV_URL === 'כאן_מדביקים_את_הקישור_מגוגל_שיטס') {
+                document.getElementById('lessonsGrid').innerHTML = '<div class="text-center col-span-full py-10 text-red-500 font-bold">שגיאה: יש לעדכן את קישור ה-CSV בקוד האתר.</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(SHEET_CSV_URL);
+                const data = await response.text();
+                parseCSV(data);
+            } catch (error) {
+                console.error("שגיאה בטעינת נתונים:", error);
+                document.getElementById('lessonsGrid').innerHTML = '<div class="text-center col-span-full py-10 text-red-500">אירעה שגיאה בטעינת השיעורים. אנא נסה שנית.</div>';
+            }
+        }
+
+        // המרת הטקסט מהאקסל למערך של אובייקטים
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',');
+            
+            allLessons = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                // טיפול בסיסי בפסיקים - מפריד נתונים
+                const currentline = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                const lesson = {
+                    date: currentline[0] ? currentline[0].replace(/"/g, '') : '',
+                    title: currentline[1] ? currentline[1].replace(/"/g, '') : '',
+                    rabbi: currentline[2] ? currentline[2].replace(/"/g, '') : '',
+                    subject: currentline[3] ? currentline[3].replace(/"/g, '') : '',
+                    access: currentline[4] ? currentline[4].replace(/"/g, '').trim() : '',
+                    video: currentline[5] ? currentline[5].replace(/"/g, '') : '',
+                    audio: currentline[6] ? currentline[6].replace(/"/g, '') : '',
+                    text: currentline[7] ? currentline[7].replace(/"/g, '') : ''
+                };
+                allLessons.push(lesson);
+            }
+            
+            // הופך את הסדר - החדש ביותר למעלה
+            allLessons.reverse();
+            
+            populateFilters();
+            renderLessons(allLessons);
+        }
+
+        // מילוי אוטומטי של רשימות הסינון
+        function populateFilters() {
+            const rabbis = [...new Set(allLessons.map(l => l.rabbi).filter(Boolean))];
+            const subjects = [...new Set(allLessons.map(l => l.subject).filter(Boolean))];
+
+            const rabbiSelect = document.getElementById('rabbiFilter');
+            rabbis.forEach(rabbi => {
+                rabbiSelect.innerHTML += `<option value="${rabbi}">${rabbi}</option>`;
+            });
+
+            const subjectSelect = document.getElementById('subjectFilter');
+            subjects.forEach(subject => {
+                subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
+            });
+        }
+
+        // ציור הכרטיסיות על המסך
+        function renderLessons(lessonsToRender) {
+            const grid = document.getElementById('lessonsGrid');
+            grid.innerHTML = '';
+
+            if(lessonsToRender.length === 0) {
+                grid.innerHTML = '<div class="text-center col-span-full py-10 text-gray-500">לא נמצאו שיעורים התואמים לחיפוש.</div>';
+                return;
+            }
+
+            lessonsToRender.forEach(lesson => {
+                // הגדרת תגית גישה (פתוח/מנויים)
+                const isPremium = lesson.access.includes('מנויים');
+                const badgeClass = isPremium ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-green-100 text-green-800 border-green-200';
+                const badgeText = isPremium ? 'למנויים בלבד 🔒' : 'פתוח לכולם 🔓';
+
+                // יצירת קישורי המדיה
+                let mediaLinks = '';
+                if(lesson.video) mediaLinks += `<a href="${lesson.video}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-medium p-2 bg-blue-50 rounded-lg">🎥 וידאו</a>`;
+                if(lesson.audio) mediaLinks += `<a href="${lesson.audio}" target="_blank" class="text-purple-600 hover:text-purple-800 text-sm font-medium p-2 bg-purple-50 rounded-lg">🎧 שמע</a>`;
+                if(lesson.text) mediaLinks += `<a href="${lesson.text}" target="_blank" class="text-gray-600 hover:text-gray-800 text-sm font-medium p-2 bg-gray-100 rounded-lg">📄 סיכום</a>`;
+
+                const cardHTML = `
+                    <div class="lesson-card bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col h-full border-t-4 border-t-[#0f172a]">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-xs text-gray-400 font-medium">${lesson.date}</span>
+                            <span class="text-xs font-bold px-2 py-1 rounded-full border ${badgeClass}">${badgeText}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">${lesson.title}</h3>
+                        <p class="text-[#d4af37] font-semibold mb-1">👤 ${lesson.rabbi}</p>
+                        <p class="text-sm text-gray-500 mb-4 bg-gray-50 inline-block px-2 py-1 rounded">🏷️ ${lesson.subject}</p>
+                        
+                        <div class="mt-auto pt-4 border-t border-gray-100 flex gap-2 flex-wrap">
+                            ${mediaLinks || '<span class="text-sm text-gray-400">טרם הועלו קבצים</span>'}
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += cardHTML;
+            });
+        }
+
+        // לוגיקת החיפוש והסינון
+        function filterData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const selectedRabbi = document.getElementById('rabbiFilter').value;
+            const selectedSubject = document.getElementById('subjectFilter').value;
+
+            const filtered = allLessons.filter(lesson => {
+                const matchSearch = lesson.title.toLowerCase().includes(searchTerm);
+                const matchRabbi = selectedRabbi === "" || lesson.rabbi === selectedRabbi;
+                const matchSubject = selectedSubject === "" || lesson.subject === selectedSubject;
+                
+                return matchSearch && matchRabbi && matchSubject;
+            });
+
+            renderLessons(filtered);
+        }
+
+        // האזנה לשינויים בתיבות החיפוש
+        document.getElementById('searchInput').addEventListener('input', filterData);
+        document.getElementById('rabbiFilter').addEventListener('change', filterData);
+        document.getElementById('subjectFilter').addEventListener('change', filterData);
+
+        // הפעלת הטעינה כשהדף עולה
+        fetchLessons();
+    </script>
+</body>
+</html>
