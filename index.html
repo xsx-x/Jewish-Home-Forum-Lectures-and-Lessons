@@ -156,80 +156,99 @@
         // 2. הקישור החדש: לוח שיעורים (זמני שיעורים)
         const SCHEDULE_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?gid=1693315274&single=true&output=csv';
         // ==========================================
+// ==========================================
+        const EXPLORER_CSV_URL = 'הכנס_את_הקישור_של_סייר_הקבצים';
+        const SCHEDULE_CSV_URL = 'הכנס_את_הקישור_השני_של_לוח_הזמנים';
+        // ==========================================
 
         let fileSystem = { name: "ראשי", type: "folder", children: {} };
-        let lecturerSystem = { name: "מרצים", type: "folder", children: {} }; // המערכת החדשה
+        let lecturerSystem = { name: "מרצים", type: "folder", children: {} };
         let currentPathArr = []; 
-        let currentViewMode = 'folders'; // שומר את מצב התצוגה הנוכחי
-        let allSearchableItems = [];
+        let currentViewMode = 'folders'; 
+        let allSearchableItems = []; 
 
-function switchTab(tabId) {
-            // הסתרת כל הדפים
+        // ==================== פונקציות עיצוב וטעינה ====================
+        function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            // הצגת הדף המבוקש
             document.getElementById(tabId).classList.add('active');
             
-            // עיצוב הכפתורים בתפריט
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                // קודם כל, הופך את כל הכפתורים לאפורים-שקופים
                 btn.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium text-white hover:bg-slate-700 whitespace-nowrap";
-                
-                // ואז, אם זה הכפתור שלחצנו עליו - צובע אותו בזהב
                 if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
                     btn.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm whitespace-nowrap";
                 }
             });
         }
+
+        // שלדי טעינה (Skeleton Loaders) שמופיעים לפני שהנתונים מגיעים
+        function showSkeletons() {
+            const grid = document.getElementById('explorerGrid');
+            grid.innerHTML = Array(10).fill().map(() => `
+                <div class="tile-card bg-white rounded-xl border border-gray-100 p-5 aspect-[4/3] flex flex-col items-center justify-center animate-pulse">
+                    <div class="w-16 h-16 bg-slate-200 rounded-full mb-4"></div>
+                    <div class="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-3 bg-slate-200 rounded w-1/2"></div>
+                </div>
+            `).join('');
+
+            document.getElementById('scheduleContainer').innerHTML = Array(3).fill().map(() => `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-pulse mb-6">
+                    <div class="h-6 bg-slate-200 rounded w-1/3 mb-6"></div>
+                    <div class="h-16 bg-slate-100 rounded mb-3"></div>
+                    <div class="h-16 bg-slate-100 rounded"></div>
+                </div>
+            `).join('');
+        }
+
+        function switchViewMode(mode) {
+            currentViewMode = mode;
+            currentPathArr = []; 
+            clearSearch(false);
+            
+            document.getElementById('btnViewFolders').className = mode === 'folders' ? "px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow" : "px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700";
+            document.getElementById('btnViewLecturers').className = mode === 'lecturers' ? "px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow" : "px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700";
+            
+            renderCurrentFolder();
+        }
+
         // ==================== לוגיקת סייר הקבצים ====================
         async function fetchExplorerData() {
-            const container = document.getElementById('breadcrumbsContainer');
-            if(!EXPLORER_CSV_URL || EXPLORER_CSV_URL.includes('הכנס_את_הקישור')) {
-                container.innerHTML = '<span class="text-red-500 font-bold px-4 py-2 bg-red-50 rounded">שגיאה: חסר קישור לסייר הקבצים בקוד.</span>';
-                return;
-            }
+            if(EXPLORER_CSV_URL.includes('הכנס_את_הקישור')) return;
             try {
                 const response = await fetch(EXPLORER_CSV_URL);
                 const data = await response.text();
-                
-                // בדיקת בטיחות: האם בטעות ייצאנו כדף אינטרנט במקום CSV?
-                if(data.includes('<html') || data.includes('<body')) {
-                    container.innerHTML = '<span class="text-red-500 font-bold px-4 py-2 bg-red-50 rounded">שגיאה: הקישור של סייר הקבצים מוביל לדף אינטרנט. נא לפרסם שוב כ-CSV.</span>';
-                    return;
-                }
-                
                 buildFileSystem(data);
-            } catch (error) { 
-                console.error("שגיאה בסייר הקבצים:", error); 
-                container.innerHTML = `<span class="text-red-500 font-bold px-4 py-2 bg-red-50 rounded">שגיאה בטעינת הנתונים: ${error.message}</span>`;
-            }
+            } catch (error) { console.error(error); }
         }
 
         function buildFileSystem(csvText) {
             const lines = csvText.split('\n');
             fileSystem.children = {}; 
+            lecturerSystem.children = {};
             allSearchableItems = [];
             let lecturersSet = new Set();
             
-            // מחיקת אפשרויות קודמות מהסינון
-            const lecturerSelect = document.getElementById('lecturerFilter');
-            lecturerSelect.innerHTML = '<option value="">כל הרבנים והמרצות</option>';
+            document.getElementById('lecturerFilter').innerHTML = '<option value="">כל הרבנים והמרצות</option>';
 
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i] || !lines[i].trim()) continue;
-                
                 const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 
-                // הגנות בטיחות למקרה שחסרה עמודה בשורה מסוימת באקסל
                 const pathStr = row[0] ? row[0].replace(/"/g, '').trim() : '';
                 const fileName = row[1] ? row[1].replace(/"/g, '').trim() : '';
                 const type = row[2] ? row[2].replace(/"/g, '').trim() : '';
                 const link = row[3] ? row[3].replace(/"/g, '').trim() : '';
                 const access = row[4] ? row[4].replace(/"/g, '').trim() : 'פתוח';
                 const lecturer = row[5] ? row[5].replace(/"/g, '').trim() : '';
+                const creationDate = row[6] ? row[6].replace(/"/g, '').trim() : ''; // שאיבת התאריך החדש
                 
                 if(!pathStr || !fileName) continue;
                 if(lecturer) lecturersSet.add(lecturer);
 
+                const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr, lecturer: lecturer, date: creationDate };
+                allSearchableItems.push(fileObj);
+
+                // 1. בניית עץ התיקיות הרגיל
                 const folders = pathStr.split('/');
                 let currentNode = fileSystem;
                 let currentPathBuild = [];
@@ -240,26 +259,36 @@ function switchTab(tabId) {
                     let folderName = folders[j];
                     currentPathBuild.push(folderName);
                     if (!currentNode.children[folderName]) {
-                        const newFolder = { name: folderName, type: "folder", pathArr: [...currentPathBuild], lecturer: lecturer, children: {} };
-                        currentNode.children[folderName] = newFolder;
-                        const exists = allSearchableItems.find(item => item.type === "folder" && item.pathArr.join('/') === newFolder.pathArr.join('/'));
-                        if(!exists) allSearchableItems.push(newFolder);
+                        currentNode.children[folderName] = { name: folderName, type: "folder", pathArr: [...currentPathBuild], children: {} };
                     }
                     currentNode = currentNode.children[folderName];
                 }
-                const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr, lecturer: lecturer };
                 currentNode.children[fileName] = fileObj;
-                // הוספת הקובץ גם לעץ המרצים (אם יש לו מרצה)
+
+                // 2. בניית עץ המרצים (רק אם יש מרצה)
                 if (lecturer) {
                     if (!lecturerSystem.children[lecturer]) {
-                        lecturerSystem.children[lecturer] = { name: lecturer, type: "folder", pathArr: [lecturer], lecturer: lecturer, children: {} };
+                        lecturerSystem.children[lecturer] = { name: lecturer, type: "folder", pathArr: [lecturer], children: {} };
                     }
                     lecturerSystem.children[lecturer].children[fileName] = fileObj;
                 }
-                allSearchableItems.push(fileObj);
             }
             
-            Array.from(lecturersSet).sort().forEach(l => { lecturerSelect.innerHTML += `<option value="${l}">${l}</option>`; });
+            Array.from(lecturersSet).sort().forEach(l => { document.getElementById('lecturerFilter').innerHTML += `<option value="${l}">${l}</option>`; });
+            
+            // מוסיף את כפתורי הפיצול ל-HTML אם הם לא קיימים (במקום שתערוך את ה-HTML למעלה)
+            if(!document.getElementById('btnViewFolders')) {
+                const breadcrumbs = document.getElementById('breadcrumbsContainer');
+                breadcrumbs.insertAdjacentHTML('beforebegin', `
+                    <div class="flex justify-center mb-6">
+                        <div class="bg-gray-100 p-1 rounded-lg inline-flex shadow-inner">
+                            <button onclick="switchViewMode('folders')" id="btnViewFolders" class="px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow">📁 לפי נושאים ותיקיות</button>
+                            <button onclick="switchViewMode('lecturers')" id="btnViewLecturers" class="px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700">👤 לפי רב / מרצה</button>
+                        </div>
+                    </div>
+                `);
+            }
+            
             renderCurrentFolder();
         }
 
@@ -272,49 +301,35 @@ function switchTab(tabId) {
         function jumpToFolderFromSearch(pathString) {
             const pathArray = pathString.split('||');
             if(pathArray[0] === "ראשי") pathArray.shift(); 
+            currentViewMode = 'folders'; // קופץ תמיד לעץ התיקיות
             currentPathArr = pathArray;
-            clearSearch(false);
-            renderCurrentFolder();
-        }
-
-function switchViewMode(mode) {
-            currentViewMode = mode;
-            currentPathArr = []; // איפוס הנתיב בכל מעבר
-            clearSearch(false);
-            
-            // עדכון עיצוב הכפתורים
-            document.getElementById('btnViewFolders').className = mode === 'folders' ? "px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow" : "px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700";
-            document.getElementById('btnViewLecturers').className = mode === 'lecturers' ? "px-6 py-2 rounded-md font-bold text-sm transition bg-white text-[#0f172a] shadow" : "px-6 py-2 rounded-md font-bold text-sm transition text-gray-500 hover:text-gray-700";
-            
-            renderCurrentFolder();
+            switchViewMode('folders');
         }
 
         function renderCurrentFolder() {
-            // בוחרים את עץ הנתונים לפי המצב הנוכחי (תיקיות רגילות או מרצים)
             let baseSystem = currentViewMode === 'folders' ? fileSystem : lecturerSystem;
             let currentNode = baseSystem;
             
-            for (let folder of currentPathArr) {
-                if(currentNode.children[folder]) currentNode = currentNode.children[folder];
-            }
+            for (let folder of currentPathArr) { if(currentNode.children[folder]) currentNode = currentNode.children[folder]; }
             
             const breadcrumbsDiv = document.getElementById('breadcrumbsContainer');
             const homeText = currentViewMode === 'folders' ? "ראשי" : "כל המרצים";
+            const homeIcon = currentViewMode === 'folders' ? "🏠" : "👥";
             
-            let breadcrumbsHTML = `<button onclick="navigateTo(-1)" class="hover:text-blue-600 font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="text-lg">${currentViewMode === 'folders' ? '🏠' : '👥'}</span> ${homeText}</button>`;
+            let breadcrumbsHTML = `<button onclick="navigateTo(-1)" class="hover:text-blue-600 font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="text-lg">${homeIcon}</span> ${homeText}</button>`;
             
             currentPathArr.forEach((folder, index) => {
                 breadcrumbsHTML += `<span class="text-gray-300 font-bold">/</span>`;
                 breadcrumbsHTML += `<button onclick="navigateTo(${index})" class="hover:text-blue-600 font-medium hover:bg-slate-50 px-2 py-1 rounded transition">${folder}</button>`;
             });
-            
             breadcrumbsDiv.innerHTML = breadcrumbsHTML;
             drawGrid(Object.values(currentNode.children));
         }
+
         function drawGrid(items) {
             const gridDiv = document.getElementById('explorerGrid');
             gridDiv.innerHTML = '';
-            if (items.length === 0) { gridDiv.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 font-medium text-lg">אין קבצים או תיקיות תואמים.</div>'; return; }
+            if (items.length === 0) { gridDiv.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 font-medium text-lg">התיקייה ריקה.</div>'; return; }
             
             items.sort((a, b) => {
                 if (a.type === "folder" && b.type !== "folder") return -1;
@@ -322,14 +337,22 @@ function switchViewMode(mode) {
                 return a.name.localeCompare(b.name);
             });
 
+            const today = new Date();
+
             items.forEach(item => {
                 if (item.type === "folder") {
                     const pathStr = item.pathArr ? item.pathArr.join('||') : item.name;
                     const safePathStr = pathStr.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    
+                    // ספירת כמות הפריטים בתוך התיקייה
+                    const itemCount = Object.keys(item.children || {}).length;
+                    const itemText = itemCount === 1 ? 'פריט 1' : `${itemCount} פריטים`;
+
                     gridDiv.innerHTML += `
-                        <div onclick="jumpToFolderFromSearch('${safePathStr}')" class="tile-card bg-slate-50 rounded-xl p-5 border border-slate-200 cursor-pointer flex flex-col items-center justify-center text-center aspect-[4/3] relative">
-                            <span class="text-5xl mb-3 drop-shadow-sm">📁</span>
+                        <div onclick="jumpToFolderFromSearch('${safePathStr}')" class="tile-card bg-slate-50 rounded-xl p-5 border border-slate-200 cursor-pointer flex flex-col items-center justify-center text-center aspect-[4/3] relative hover:bg-white">
+                            <span class="text-5xl mb-2 drop-shadow-sm">📁</span>
                             <span class="font-bold text-slate-800 line-clamp-2">${item.name}</span>
+                            <span class="text-xs text-gray-400 mt-2 bg-gray-200 px-2 py-1 rounded-full">${itemText}</span>
                         </div>
                     `;
                 } else {
@@ -337,22 +360,27 @@ function switchViewMode(mode) {
                     if(item.type === "וידאו") { icon = "🎥"; iconColor = "text-blue-600"; bgColor = "bg-blue-50"; }
                     if(item.type === "שמע") { icon = "🎧"; iconColor = "text-purple-600"; bgColor = "bg-purple-50"; }
                     
-                    // בדיקת בטיחות: וידוא ש-access הוא טקסט גם אם התא באקסל היה ריק
                     const safeAccess = item.access || "";
                     const isPremium = safeAccess.includes('מנויים');
-                    
                     const badgeClass = isPremium ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-green-100 text-green-800 border-green-200";
-                    const badgeText = isPremium ? "🔒 מנויים" : "🔓 פתוח";
-                    const pathHint = item.path ? `<p class="text-[10px] text-gray-400 mt-2 truncate w-full px-2" dir="ltr">${item.path}</p>` : '';
+                    
+                    // חישוב האם הקובץ "חדש" (הועלה ב-14 הימים האחרונים)
+                    let isNew = false;
+                    if(item.date) {
+                        const fileDate = new Date(item.date);
+                        const diffDays = Math.ceil(Math.abs(today - fileDate) / (1000 * 60 * 60 * 24));
+                        if(diffDays <= 14) isNew = true;
+                    }
+                    const newBadgeHTML = isNew ? `<div class="absolute -top-2 -left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md z-10 animate-bounce">🌟 חדש!</div>` : '';
 
                     gridDiv.innerHTML += `
                         <a href="${item.link}" target="_blank" class="tile-card bg-white rounded-xl border border-gray-200 cursor-pointer flex flex-col relative overflow-hidden h-full">
+                            ${newBadgeHTML}
                             <div class="h-2 w-full ${isPremium ? 'bg-[#0f172a]' : 'bg-[#d4af37]'}"></div>
-                            <div class="absolute top-3 right-3 border ${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">${badgeText}</div>
+                            <div class="absolute top-3 right-3 border ${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">${isPremium ? "🔒 מנויים" : "🔓 פתוח"}</div>
                             <div class="p-5 flex flex-col items-center flex-grow justify-center text-center mt-4">
                                 <div class="w-16 h-16 rounded-full ${bgColor} flex items-center justify-center mb-4 shadow-sm"><span class="text-3xl ${iconColor}">${icon}</span></div>
                                 <h3 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2">${item.name}</h3>
-                                ${pathHint}
                             </div>
                         </a>
                     `;
@@ -391,27 +419,14 @@ function switchViewMode(mode) {
         document.getElementById('searchInput').addEventListener('input', handleSearch);
         document.getElementById('lecturerFilter').addEventListener('change', handleSearch);
 
-        // ==================== לוגיקת לוח השיעורים ====================
+        // ==================== לוגיקת לוח השיעורים (כולל התיקון הקריטי לבאג הגרש) ====================
         async function fetchScheduleData() {
-            const container = document.getElementById('scheduleContainer');
-            if(!SCHEDULE_CSV_URL || SCHEDULE_CSV_URL.includes('הכנס_את_הקישור')) {
-                container.innerHTML = '<div class="text-center py-10 text-red-500 font-bold">טרם הוזן קישור ללוח הזמנים בקוד האתר.</div>';
-                return;
-            }
+            if(SCHEDULE_CSV_URL.includes('הכנס_את_הקישור')) return;
             try {
                 const response = await fetch(SCHEDULE_CSV_URL);
                 const data = await response.text();
-                
-                if(data.includes('<html') || data.includes('<body')) {
-                    container.innerHTML = '<div class="text-center py-10 text-red-500 font-bold">שגיאה: קישור לוח הזמנים מוביל לדף אינטרנט. יש לפרסם את גיליון זמני שיעורים כ-CSV.</div>';
-                    return;
-                }
-                
                 parseAndRenderSchedule(data);
-            } catch (error) { 
-                console.error("שגיאה בלוח הזמנים:", error); 
-                container.innerHTML = `<div class="text-center py-10 text-red-500 font-bold">שגיאה: ${error.message}</div>`;
-            }
+            } catch (error) { console.error(error); }
         }
 
         function parseAndRenderSchedule(csvText) {
@@ -422,25 +437,32 @@ function switchViewMode(mode) {
                 if (!lines[i] || !lines[i].trim()) continue;
                 const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 
-                const date = row[0] ? row[0].replace(/"/g, '').trim() : '';
+                let rawDate = row[0] ? row[0].replace(/"/g, '').trim() : '';
                 const time = row[1] ? row[1].replace(/"/g, '').trim() : '';
                 const lecturer = row[2] ? row[2].replace(/"/g, '').trim() : '';
                 const topic = row[3] ? row[3].replace(/"/g, '').trim() : '';
                 const audience = row[4] ? row[4].replace(/"/g, '').trim() : '';
                 
-                if(!date) continue;
+                if(!rawDate) continue;
 
-                if(!groupedSchedule[date]) groupedSchedule[date] = [];
-                groupedSchedule[date].push({ time, lecturer, topic, audience });
+                // *** תיקון הבאג: נרמול התאריך! ***
+                // אנו מסירים גרשיים ורווחים כפולים כדי שהמערכת תתייחס ל-"ה' אייר" ול-"ה אייר" כאל אותו יום בדיוק.
+                let normalizedDateKey = rawDate.replace(/'/g, '').replace(/"/g, '').replace(/\s+/g, ' ').trim();
+
+                // שומרים את השם המקורי לתצוגה, אבל משתמשים בשם המנורמל לאיחוד השורות
+                if(!groupedSchedule[normalizedDateKey]) {
+                    groupedSchedule[normalizedDateKey] = { displayName: rawDate, events: [] };
+                }
+                groupedSchedule[normalizedDateKey].events.push({ time, lecturer, topic, audience });
             }
 
             const container = document.getElementById('scheduleContainer');
             container.innerHTML = '';
 
-            for (const [date, events] of Object.entries(groupedSchedule)) {
+            for (const [dateKey, dayData] of Object.entries(groupedSchedule)) {
                 let eventsHTML = '';
                 
-                events.forEach(ev => {
+                dayData.events.forEach(ev => {
                     const safeTopic = ev.topic || "";
                     if(safeTopic.includes('הפסקה')) {
                         eventsHTML += `
@@ -475,7 +497,7 @@ function switchViewMode(mode) {
                 container.innerHTML += `
                     <div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
                         <div class="bg-[#0f172a] text-[#d4af37] px-6 py-4 border-b-4 border-[#d4af37]">
-                            <h3 class="text-xl font-bold flex items-center gap-2">📅 ${date}</h3>
+                            <h3 class="text-xl font-bold flex items-center gap-2">📅 ${dayData.displayName}</h3>
                         </div>
                         <div class="p-6 space-y-3 bg-gray-50">
                             ${eventsHTML}
@@ -485,12 +507,10 @@ function switchViewMode(mode) {
             }
         }
 
-        // הגדרה לאתחול נכון של האתר כשהוא נטען
+        // ==================== הפעלת האתר ====================
         document.addEventListener('DOMContentLoaded', () => {
-            // מפעיל את העיצוב על כפתור סייר השיעורים
             switchTab('library');
-            
-            // קריאה לשתי מערכות הנתונים מהדרייב והאקסל
+            showSkeletons(); // מפעיל את האנימציות לפני שרת הנתונים חזר!
             fetchExplorerData();
             fetchScheduleData();
         });
