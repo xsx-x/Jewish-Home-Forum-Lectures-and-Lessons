@@ -138,9 +138,9 @@
     </footer>
 
     <script>
-        // ==========================================
+    // ==========================================
         // 1. הקישור הישן: סייר השיעורים (הסקריפט מהדרייב)
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?gid=0&single=true&output=csv';        
+        const EXPLORER_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?gid=0&single=true&output=csv';
         
         // 2. הקישור החדש: לוח שיעורים (זמני שיעורים)
         const SCHEDULE_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?gid=0&single=true&output=csv';
@@ -150,23 +150,40 @@
         let currentPathArr = []; 
         let allSearchableItems = []; 
 
-        function switchTab(tabId) {
+        function switchTab(event, tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             
             const btns = document.querySelectorAll('.nav-btn');
             btns.forEach(btn => btn.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium text-white hover:bg-slate-700 whitespace-nowrap");
-            event.target.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm whitespace-nowrap";
+            
+            if(event && event.target) {
+                event.target.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm whitespace-nowrap";
+            }
         }
 
         // ==================== לוגיקת סייר הקבצים ====================
         async function fetchExplorerData() {
-            if(EXPLORER_CSV_URL.includes('הכנס_את_הקישור')) return;
+            const container = document.getElementById('breadcrumbsContainer');
+            if(!EXPLORER_CSV_URL || EXPLORER_CSV_URL.includes('הכנס_את_הקישור')) {
+                container.innerHTML = '<span class="text-red-500 font-bold px-4 py-2 bg-red-50 rounded">שגיאה: חסר קישור לסייר הקבצים בקוד.</span>';
+                return;
+            }
             try {
                 const response = await fetch(EXPLORER_CSV_URL);
                 const data = await response.text();
+                
+                // בדיקת בטיחות: האם בטעות ייצאנו כדף אינטרנט במקום CSV?
+                if(data.includes('<html') || data.includes('<body')) {
+                    container.innerHTML = '<span class="text-red-500 font-bold px-4 py-2 bg-red-50 rounded">שגיאה: הקישור של סייר הקבצים מוביל לדף אינטרנט. נא לפרסם שוב כ-CSV.</span>';
+                    return;
+                }
+                
                 buildFileSystem(data);
-            } catch (error) { console.error(error); }
+            } catch (error) { 
+                console.error("שגיאה בסייר הקבצים:", error); 
+                container.innerHTML = `<span class="text-red-500 font-bold px-4 py-2 bg-red-50 rounded">שגיאה בטעינת הנתונים: ${error.message}</span>`;
+            }
         }
 
         function buildFileSystem(csvText) {
@@ -174,15 +191,22 @@
             fileSystem.children = {}; 
             allSearchableItems = [];
             let lecturersSet = new Set();
+            
+            // מחיקת אפשרויות קודמות מהסינון
+            const lecturerSelect = document.getElementById('lecturerFilter');
+            lecturerSelect.innerHTML = '<option value="">כל הרבנים והמרצות</option>';
 
             for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
+                if (!lines[i] || !lines[i].trim()) continue;
+                
                 const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                // הגנות בטיחות למקרה שחסרה עמודה בשורה מסוימת באקסל
                 const pathStr = row[0] ? row[0].replace(/"/g, '').trim() : '';
                 const fileName = row[1] ? row[1].replace(/"/g, '').trim() : '';
                 const type = row[2] ? row[2].replace(/"/g, '').trim() : '';
                 const link = row[3] ? row[3].replace(/"/g, '').trim() : '';
-                const access = row[4] ? row[4].replace(/"/g, '').trim() : '';
+                const access = row[4] ? row[4].replace(/"/g, '').trim() : 'פתוח';
                 const lecturer = row[5] ? row[5].replace(/"/g, '').trim() : '';
                 
                 if(!pathStr || !fileName) continue;
@@ -210,7 +234,6 @@
                 allSearchableItems.push(fileObj);
             }
             
-            const lecturerSelect = document.getElementById('lecturerFilter');
             Array.from(lecturersSet).sort().forEach(l => { lecturerSelect.innerHTML += `<option value="${l}">${l}</option>`; });
             renderCurrentFolder();
         }
@@ -232,6 +255,7 @@
         function renderCurrentFolder() {
             let currentNode = fileSystem;
             for (let folder of currentPathArr) { if(currentNode.children[folder]) currentNode = currentNode.children[folder]; }
+            
             const breadcrumbsDiv = document.getElementById('breadcrumbsContainer');
             let breadcrumbsHTML = `<button onclick="navigateTo(-1)" class="hover:text-blue-600 font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="text-lg">🏠</span> ראשי</button>`;
             currentPathArr.forEach((folder, index) => {
@@ -268,7 +292,10 @@
                     if(item.type === "וידאו") { icon = "🎥"; iconColor = "text-blue-600"; bgColor = "bg-blue-50"; }
                     if(item.type === "שמע") { icon = "🎧"; iconColor = "text-purple-600"; bgColor = "bg-purple-50"; }
                     
-                    const isPremium = item.access.includes('מנויים');
+                    // בדיקת בטיחות: וידוא ש-access הוא טקסט גם אם התא באקסל היה ריק
+                    const safeAccess = item.access || "";
+                    const isPremium = safeAccess.includes('מנויים');
+                    
                     const badgeClass = isPremium ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-green-100 text-green-800 border-green-200";
                     const badgeText = isPremium ? "🔒 מנויים" : "🔓 פתוח";
                     const pathHint = item.path ? `<p class="text-[10px] text-gray-400 mt-2 truncate w-full px-2" dir="ltr">${item.path}</p>` : '';
@@ -300,7 +327,8 @@
             breadcrumbs.classList.add('hidden'); searchHeader.classList.remove('hidden');
 
             const results = allSearchableItems.filter(item => {
-                const searchString = item.type === "folder" ? item.name : (item.name + " " + item.path);
+                const safePath = item.path || "";
+                const searchString = item.type === "folder" ? item.name : (item.name + " " + safePath);
                 const matchName = searchString.toLowerCase().includes(searchTerm);
                 const matchLecturer = selectedLecturer === "" || (item.lecturer && item.lecturer === selectedLecturer);
                 return matchName && matchLecturer;
@@ -320,15 +348,25 @@
 
         // ==================== לוגיקת לוח השיעורים ====================
         async function fetchScheduleData() {
-            if(SCHEDULE_CSV_URL.includes('הכנס_את_הקישור')) {
-                document.getElementById('scheduleContainer').innerHTML = '<div class="text-center py-10 text-red-500 font-bold">טרם הוזן קישור ללוח הזמנים.</div>';
+            const container = document.getElementById('scheduleContainer');
+            if(!SCHEDULE_CSV_URL || SCHEDULE_CSV_URL.includes('הכנס_את_הקישור')) {
+                container.innerHTML = '<div class="text-center py-10 text-red-500 font-bold">טרם הוזן קישור ללוח הזמנים בקוד האתר.</div>';
                 return;
             }
             try {
                 const response = await fetch(SCHEDULE_CSV_URL);
                 const data = await response.text();
+                
+                if(data.includes('<html') || data.includes('<body')) {
+                    container.innerHTML = '<div class="text-center py-10 text-red-500 font-bold">שגיאה: קישור לוח הזמנים מוביל לדף אינטרנט. יש לפרסם את גיליון זמני שיעורים כ-CSV.</div>';
+                    return;
+                }
+                
                 parseAndRenderSchedule(data);
-            } catch (error) { console.error(error); }
+            } catch (error) { 
+                console.error("שגיאה בלוח הזמנים:", error); 
+                container.innerHTML = `<div class="text-center py-10 text-red-500 font-bold">שגיאה: ${error.message}</div>`;
+            }
         }
 
         function parseAndRenderSchedule(csvText) {
@@ -336,8 +374,9 @@
             const groupedSchedule = {};
 
             for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
+                if (!lines[i] || !lines[i].trim()) continue;
                 const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
                 const date = row[0] ? row[0].replace(/"/g, '').trim() : '';
                 const time = row[1] ? row[1].replace(/"/g, '').trim() : '';
                 const lecturer = row[2] ? row[2].replace(/"/g, '').trim() : '';
@@ -357,8 +396,8 @@
                 let eventsHTML = '';
                 
                 events.forEach(ev => {
-                    // זיהוי שורת הפסקה
-                    if(ev.topic.includes('הפסקה')) {
+                    const safeTopic = ev.topic || "";
+                    if(safeTopic.includes('הפסקה')) {
                         eventsHTML += `
                             <div class="flex items-center gap-4 bg-slate-100 p-3 rounded-lg border border-slate-200 opacity-80">
                                 <span class="font-bold text-slate-500 min-w-[50px] text-left" dir="ltr">${ev.time}</span>
@@ -367,7 +406,6 @@
                             </div>
                         `;
                     } else {
-                        // בחירת צבע התגית לפי קהל היעד
                         let badgeColor = "bg-gray-100 text-gray-800";
                         if(ev.audience === "זוגי") badgeColor = "bg-purple-100 text-purple-800 border-purple-200";
                         if(ev.audience === "נשים") badgeColor = "bg-pink-100 text-pink-800 border-pink-200";
@@ -389,7 +427,6 @@
                     }
                 });
 
-                // בניית הכרטיס של התאריך כולו
                 container.innerHTML += `
                     <div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
                         <div class="bg-[#0f172a] text-[#d4af37] px-6 py-4 border-b-4 border-[#d4af37]">
@@ -403,9 +440,15 @@
             }
         }
 
-        // הפעלת שתי הקריאות
-        fetchExplorerData();
-        fetchScheduleData();
+        // הגדרה לאתחול נכון של הכפתורים בתפריט
+        document.addEventListener('DOMContentLoaded', () => {
+            // "מדמה" לחיצה על סייר השיעורים כשהדף עולה כדי שהעיצוב של הכפתור יופעל
+            switchTab({target: document.querySelector('.nav-btn')}, 'library');
+            
+            // קריאה לנתונים
+            fetchExplorerData();
+            fetchScheduleData();
+        });
     </script>
 </body>
 </html>
