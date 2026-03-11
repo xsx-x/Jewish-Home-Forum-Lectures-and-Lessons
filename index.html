@@ -150,18 +150,23 @@
         let currentPathArr = []; 
         let allSearchableItems = []; 
 
-        function switchTab(event, tabId) {
+function switchTab(tabId) {
+            // הסתרת כל הדפים
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            // הצגת הדף המבוקש
             document.getElementById(tabId).classList.add('active');
             
-            const btns = document.querySelectorAll('.nav-btn');
-            btns.forEach(btn => btn.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium text-white hover:bg-slate-700 whitespace-nowrap");
-            
-            if(event && event.target) {
-                event.target.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm whitespace-nowrap";
-            }
+            // עיצוב הכפתורים בתפריט
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                // קודם כל, הופך את כל הכפתורים לאפורים-שקופים
+                btn.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium text-white hover:bg-slate-700 whitespace-nowrap";
+                
+                // ואז, אם זה הכפתור שלחצנו עליו - צובע אותו בזהב
+                if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
+                    btn.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm whitespace-nowrap";
+                }
+            });
         }
-
         // ==================== לוגיקת סייר הקבצים ====================
         async function fetchExplorerData() {
             const container = document.getElementById('breadcrumbsContainer');
@@ -440,12 +445,12 @@
             }
         }
 
-        // הגדרה לאתחול נכון של הכפתורים בתפריט
+        // הגדרה לאתחול נכון של האתר כשהוא נטען
         document.addEventListener('DOMContentLoaded', () => {
-            // "מדמה" לחיצה על סייר השיעורים כשהדף עולה כדי שהעיצוב של הכפתור יופעל
-            switchTab({target: document.querySelector('.nav-btn')}, 'library');
+            // מפעיל את העיצוב על כפתור סייר השיעורים
+            switchTab('library');
             
-            // קריאה לנתונים
+            // קריאה לשתי מערכות הנתונים מהדרייב והאקסל
             fetchExplorerData();
             fetchScheduleData();
         });
