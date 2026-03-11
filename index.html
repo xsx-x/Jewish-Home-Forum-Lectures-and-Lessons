@@ -28,55 +28,76 @@
                 <h1 class="text-3xl font-bold text-[#d4af37]">פורום הבית היהודי</h1>
                 <p class="text-sm text-gray-300 mt-1 tracking-wide">בנשיאות הרה"ג ר' עמרם פריד שליט"א</p>
             </div>
-            <nav class="flex space-x-4 space-x-reverse bg-slate-800 p-1 rounded-lg">
-                <button onclick="switchTab('library')" class="nav-btn px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm">סייר השיעורים</button>
-                <button onclick="switchTab('about')" class="nav-btn px-6 py-2 rounded-md hover:bg-slate-700 transition font-medium text-white">אודות והרשמה</button>
+            <!-- הוספנו את "לוח שיעורים" לתפריט -->
+            <nav class="flex space-x-4 space-x-reverse bg-slate-800 p-1 rounded-lg text-sm md:text-base overflow-x-auto">
+                <button onclick="switchTab('library')" class="nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm whitespace-nowrap">סייר השיעורים</button>
+                <button onclick="switchTab('schedule')" class="nav-btn px-4 md:px-6 py-2 rounded-md hover:bg-slate-700 transition font-medium text-white whitespace-nowrap">לוח שיעורים</button>
+                <button onclick="switchTab('about')" class="nav-btn px-4 md:px-6 py-2 rounded-md hover:bg-slate-700 transition font-medium text-white whitespace-nowrap">אודות והרשמה</button>
             </nav>
         </div>
     </header>
 
     <main class="container mx-auto px-4 py-8 flex-grow">
         
+        <!-- ================= דף סייר השיעורים ================= -->
         <div id="library" class="tab-content active">
             
             <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 mb-8 text-white shadow-md flex flex-col md:flex-row items-center justify-between border-r-4 border-[#d4af37]">
                 <div class="mb-4 md:mb-0">
-                    <h2 class="text-2xl font-bold text-[#d4af37] mb-2">ברוכים הבאים לאוצר השיעורים של פורום הבית היהודי</h2>
-                    <p class="text-gray-300">התכנים המלאים פתוחים רק לחברים בפורום. להצטרפות וגישה מלאה לחצו כאן.</p>
+                    <h2 class="text-2xl font-bold text-[#d4af37] mb-2">ברוכים הבאים לאוצר השיעורים</h2>
+                    <p class="text-gray-300">התכנים המלאים פתוחים לחברים בפורום. להצטרפות וגישה מלאה לחצו כאן.</p>
                 </div>
                 <button onclick="switchTab('about')" class="bg-[#d4af37] hover:bg-[#b5952f] text-[#0f172a] font-bold py-3 px-8 rounded-xl transition duration-300 whitespace-nowrap shadow-lg flex items-center gap-2">
                     לפרטים והצטרפות <span>←</span>
                 </button>
             </div>
 
-            <!-- שורת חיפוש וסינון רבנים/מרצות -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-3">
                 <div class="relative flex-grow">
                     <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">🔍</span>
-                    <input type="text" id="searchInput" placeholder="חיפוש חופשי (שם רב/מרצה, נושא, או שיעור)..." 
-                           class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none bg-gray-50 transition">
+                    <input type="text" id="searchInput" placeholder="חיפוש חופשי (שם מרצה, נושא, או שיעור)..." 
+                           class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] outline-none bg-gray-50 transition">
                 </div>
                 <select id="lecturerFilter" class="py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] outline-none bg-gray-50 min-w-[220px]">
                     <option value="">כל הרבנים והמרצים</option>
-                    <!-- יתמלא אוטומטית -->
                 </select>
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 min-h-[400px]">
-                
                 <div id="breadcrumbsContainer" class="mb-6 pb-4 border-b border-gray-100 flex items-center gap-2 overflow-x-auto whitespace-nowrap breadcrumbs-scroll text-sm md:text-base">
-                    טוען נתונים מאוצר השיעורים...
+                    טוען נתונים...
                 </div>
-
                 <div id="searchResultsHeader" class="hidden mb-6 pb-4 border-b border-gray-100">
                     <h3 class="text-lg font-bold text-slate-800">תוצאות חיפוש: <span id="searchCount" class="text-[#d4af37]"></span></h3>
                     <button onclick="clearSearch()" class="text-sm text-blue-600 hover:underline mt-1">חזור לסייר התיקיות</button>
                 </div>
-
                 <div id="explorerGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5"></div>
             </div>
         </div>
 
+        <!-- ================= דף לוח שיעורים ================= -->
+        <div id="schedule" class="tab-content">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#0f172a] inline-block relative">
+                        מרחב שותפים - לוח שיעורים
+                        <span class="absolute -bottom-3 right-0 w-1/2 h-1.5 bg-[#d4af37] rounded-full"></span>
+                    </h2>
+                    <p class="text-gray-500 mt-6 text-lg">ההרצאות זמינות במרחב הדיגיטלי ובקו הטלפון</p>
+                </div>
+
+                <!-- כאן יישתל הלוח האוטומטי -->
+                <div id="scheduleContainer" class="space-y-8">
+                    <div class="text-center py-10 text-gray-500 font-medium">טוען את לוח השיעורים...</div>
+                </div>
+                
+                <div class="mt-8 bg-amber-50 border border-amber-200 p-4 rounded-lg text-sm text-amber-800">
+                    <strong>כללי המרחב:</strong> 1. אין התחייבות לשום דבר. 2. הסילבוס נתון לשינויים. 3. ההרצאות יימסרו בהקלטות. 4. הכל בכפוף לתקנון.
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= דף אודות והרשמה ================= -->
         <div id="about" class="tab-content">
             <div class="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-100 max-w-4xl mx-auto">
                 <div class="text-center mb-10">
@@ -111,14 +132,18 @@
             <p>© כל הזכויות שמורות לפורום הבית היהודי</p>
             <p class="mt-2 md:mt-0">
                 נבנה על ידי <span class="text-gray-600 font-bold">לב טוב</span> | 
-                <a href="mailto:myylbwt@gmail.com" class="hover:text-[#d4af37] transition">myylbwt@gmail.com</a>
+                <a href="myylbwt@gmail.com" class="hover:text-[#d4af37] transition">myylbwt@gmail.com</a>
             </p>
         </div>
     </footer>
 
     <script>
         // ==========================================
+        // 1. הקישור הישן: סייר השיעורים (הסקריפט מהדרייב)
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?output=csv';        
+        
+        // 2. הקישור החדש: לוח שיעורים (זמני שיעורים)
+        const SCHEDULE_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?gid=1693315274&single=true&output=csv';
         // ==========================================
 
         let fileSystem = { name: "ראשי", type: "folder", children: {} };
@@ -130,34 +155,28 @@
             document.getElementById(tabId).classList.add('active');
             
             const btns = document.querySelectorAll('.nav-btn');
-            btns.forEach(btn => btn.className = "nav-btn px-6 py-2 rounded-md transition font-medium text-white hover:bg-slate-700");
-            event.target.className = "nav-btn px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm";
+            btns.forEach(btn => btn.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium text-white hover:bg-slate-700 whitespace-nowrap");
+            event.target.className = "nav-btn px-4 md:px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm whitespace-nowrap";
         }
 
-        async function fetchDriveData() {
-            if(SHEET_CSV_URL === 'כאן_מדביקים_את_הקישור_מגוגל_שיטס') {
-                document.getElementById('breadcrumbsContainer').innerHTML = '<span class="text-red-500 font-bold">חסר קישור CSV בקוד האתר.</span>';
-                return;
-            }
+        // ==================== לוגיקת סייר הקבצים ====================
+        async function fetchExplorerData() {
+            if(EXPLORER_CSV_URL.includes('הכנס_את_הקישור')) return;
             try {
-                const response = await fetch(SHEET_CSV_URL);
+                const response = await fetch(EXPLORER_CSV_URL);
                 const data = await response.text();
                 buildFileSystem(data);
-            } catch (error) {
-                console.error(error);
-            }
+            } catch (error) { console.error(error); }
         }
 
         function buildFileSystem(csvText) {
             const lines = csvText.split('\n');
             fileSystem.children = {}; 
             allSearchableItems = [];
-            
             let lecturersSet = new Set();
 
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i].trim()) continue;
-                
                 const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 const pathStr = row[0] ? row[0].replace(/"/g, '').trim() : '';
                 const fileName = row[1] ? row[1].replace(/"/g, '').trim() : '';
@@ -172,62 +191,39 @@
                 const folders = pathStr.split('/');
                 let currentNode = fileSystem;
                 let currentPathBuild = [];
-
                 let startIndex = folders[0] === "ראשי" ? 1 : 0;
                 if(folders[0] === "ראשי") currentPathBuild.push("ראשי");
 
                 for (let j = startIndex; j < folders.length; j++) {
                     let folderName = folders[j];
                     currentPathBuild.push(folderName);
-
                     if (!currentNode.children[folderName]) {
-                        const newFolder = { 
-                            name: folderName, 
-                            type: "folder", 
-                            pathArr: [...currentPathBuild], 
-                            lecturer: lecturer,
-                            children: {} 
-                        };
+                        const newFolder = { name: folderName, type: "folder", pathArr: [...currentPathBuild], lecturer: lecturer, children: {} };
                         currentNode.children[folderName] = newFolder;
-                        
                         const exists = allSearchableItems.find(item => item.type === "folder" && item.pathArr.join('/') === newFolder.pathArr.join('/'));
                         if(!exists) allSearchableItems.push(newFolder);
                     }
                     currentNode = currentNode.children[folderName];
                 }
-                
                 const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr, lecturer: lecturer };
                 currentNode.children[fileName] = fileObj;
                 allSearchableItems.push(fileObj);
             }
             
             const lecturerSelect = document.getElementById('lecturerFilter');
-            
-            // סידור שמות המרצים בסדר אלפביתי
-            const sortedLecturers = Array.from(lecturersSet).sort();
-            sortedLecturers.forEach(l => {
-                lecturerSelect.innerHTML += `<option value="${l}">${l}</option>`;
-            });
-
+            Array.from(lecturersSet).sort().forEach(l => { lecturerSelect.innerHTML += `<option value="${l}">${l}</option>`; });
             renderCurrentFolder();
         }
 
         function navigateTo(index) {
             clearSearch(false);
-            if (index === -1) currentPathArr = []; 
-            else currentPathArr = currentPathArr.slice(0, index + 1);
-            renderCurrentFolder();
-        }
-
-        function openFolder(folderName) {
-            currentPathArr.push(folderName);
+            if (index === -1) currentPathArr = []; else currentPathArr = currentPathArr.slice(0, index + 1);
             renderCurrentFolder();
         }
 
         function jumpToFolderFromSearch(pathString) {
             const pathArray = pathString.split('||');
             if(pathArray[0] === "ראשי") pathArray.shift(); 
-            
             currentPathArr = pathArray;
             clearSearch(false);
             renderCurrentFolder();
@@ -235,32 +231,22 @@
 
         function renderCurrentFolder() {
             let currentNode = fileSystem;
-            for (let folder of currentPathArr) {
-                if(currentNode.children[folder]) currentNode = currentNode.children[folder];
-            }
-
+            for (let folder of currentPathArr) { if(currentNode.children[folder]) currentNode = currentNode.children[folder]; }
             const breadcrumbsDiv = document.getElementById('breadcrumbsContainer');
             let breadcrumbsHTML = `<button onclick="navigateTo(-1)" class="hover:text-blue-600 font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="text-lg">🏠</span> ראשי</button>`;
-            
             currentPathArr.forEach((folder, index) => {
                 breadcrumbsHTML += `<span class="text-gray-300 font-bold">/</span>`;
                 breadcrumbsHTML += `<button onclick="navigateTo(${index})" class="hover:text-blue-600 font-medium hover:bg-slate-50 px-2 py-1 rounded transition">${folder}</button>`;
             });
             breadcrumbsDiv.innerHTML = breadcrumbsHTML;
-
-            const items = Object.values(currentNode.children);
-            drawGrid(items);
+            drawGrid(Object.values(currentNode.children));
         }
 
         function drawGrid(items) {
             const gridDiv = document.getElementById('explorerGrid');
             gridDiv.innerHTML = '';
-
-            if (items.length === 0) {
-                gridDiv.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 font-medium text-lg">אין קבצים או תיקיות תואמים.</div>';
-                return;
-            }
-
+            if (items.length === 0) { gridDiv.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 font-medium text-lg">אין קבצים או תיקיות תואמים.</div>'; return; }
+            
             items.sort((a, b) => {
                 if (a.type === "folder" && b.type !== "folder") return -1;
                 if (a.type !== "folder" && b.type === "folder") return 1;
@@ -270,10 +256,7 @@
             items.forEach(item => {
                 if (item.type === "folder") {
                     const pathStr = item.pathArr ? item.pathArr.join('||') : item.name;
-                    
-                    // התיקון הקריטי כאן: "הברחת" גרשיים כדי שלא ישברו את קוד הלחיצה
                     const safePathStr = pathStr.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                    
                     gridDiv.innerHTML += `
                         <div onclick="jumpToFolderFromSearch('${safePathStr}')" class="tile-card bg-slate-50 rounded-xl p-5 border border-slate-200 cursor-pointer flex flex-col items-center justify-center text-center aspect-[4/3] relative">
                             <span class="text-5xl mb-3 drop-shadow-sm">📁</span>
@@ -287,23 +270,15 @@
                     
                     const isPremium = item.access.includes('מנויים');
                     const badgeClass = isPremium ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-green-100 text-green-800 border-green-200";
-                    const badgeIcon = isPremium ? "🔒" : "🔓";
-                    const badgeText = isPremium ? "מנויים" : "פתוח";
-
+                    const badgeText = isPremium ? "🔒 מנויים" : "🔓 פתוח";
                     const pathHint = item.path ? `<p class="text-[10px] text-gray-400 mt-2 truncate w-full px-2" dir="ltr">${item.path}</p>` : '';
 
                     gridDiv.innerHTML += `
                         <a href="${item.link}" target="_blank" class="tile-card bg-white rounded-xl border border-gray-200 cursor-pointer flex flex-col relative overflow-hidden h-full">
                             <div class="h-2 w-full ${isPremium ? 'bg-[#0f172a]' : 'bg-[#d4af37]'}"></div>
-                            
-                            <div class="absolute top-3 right-3 border ${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                                ${badgeIcon} ${badgeText}
-                            </div>
-                            
+                            <div class="absolute top-3 right-3 border ${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">${badgeText}</div>
                             <div class="p-5 flex flex-col items-center flex-grow justify-center text-center mt-4">
-                                <div class="w-16 h-16 rounded-full ${bgColor} flex items-center justify-center mb-4 shadow-sm">
-                                    <span class="text-3xl ${iconColor}">${icon}</span>
-                                </div>
+                                <div class="w-16 h-16 rounded-full ${bgColor} flex items-center justify-center mb-4 shadow-sm"><span class="text-3xl ${iconColor}">${icon}</span></div>
                                 <h3 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2">${item.name}</h3>
                                 ${pathHint}
                             </div>
@@ -316,19 +291,13 @@
         function handleSearch() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             const selectedLecturer = document.getElementById('lecturerFilter').value;
-
             const breadcrumbs = document.getElementById('breadcrumbsContainer');
             const searchHeader = document.getElementById('searchResultsHeader');
 
             if (searchTerm === "" && selectedLecturer === "") {
-                breadcrumbs.classList.remove('hidden');
-                searchHeader.classList.add('hidden');
-                renderCurrentFolder();
-                return;
+                breadcrumbs.classList.remove('hidden'); searchHeader.classList.add('hidden'); renderCurrentFolder(); return;
             }
-
-            breadcrumbs.classList.add('hidden');
-            searchHeader.classList.remove('hidden');
+            breadcrumbs.classList.add('hidden'); searchHeader.classList.remove('hidden');
 
             const results = allSearchableItems.filter(item => {
                 const searchString = item.type === "folder" ? item.name : (item.name + " " + item.path);
@@ -336,23 +305,107 @@
                 const matchLecturer = selectedLecturer === "" || (item.lecturer && item.lecturer === selectedLecturer);
                 return matchName && matchLecturer;
             });
-
             document.getElementById('searchCount').innerText = `${results.length} תוצאות נמצאו`;
             drawGrid(results);
         }
 
         function clearSearch(render = true) {
-            document.getElementById('searchInput').value = "";
-            document.getElementById('lecturerFilter').value = "";
-            document.getElementById('breadcrumbsContainer').classList.remove('hidden');
-            document.getElementById('searchResultsHeader').classList.add('hidden');
+            document.getElementById('searchInput').value = ""; document.getElementById('lecturerFilter').value = "";
+            document.getElementById('breadcrumbsContainer').classList.remove('hidden'); document.getElementById('searchResultsHeader').classList.add('hidden');
             if(render) renderCurrentFolder();
         }
 
         document.getElementById('searchInput').addEventListener('input', handleSearch);
         document.getElementById('lecturerFilter').addEventListener('change', handleSearch);
 
-        fetchDriveData();
+        // ==================== לוגיקת לוח השיעורים ====================
+        async function fetchScheduleData() {
+            if(SCHEDULE_CSV_URL.includes('הכנס_את_הקישור')) {
+                document.getElementById('scheduleContainer').innerHTML = '<div class="text-center py-10 text-red-500 font-bold">טרם הוזן קישור ללוח הזמנים.</div>';
+                return;
+            }
+            try {
+                const response = await fetch(SCHEDULE_CSV_URL);
+                const data = await response.text();
+                parseAndRenderSchedule(data);
+            } catch (error) { console.error(error); }
+        }
+
+        function parseAndRenderSchedule(csvText) {
+            const lines = csvText.split('\n');
+            const groupedSchedule = {};
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                const date = row[0] ? row[0].replace(/"/g, '').trim() : '';
+                const time = row[1] ? row[1].replace(/"/g, '').trim() : '';
+                const lecturer = row[2] ? row[2].replace(/"/g, '').trim() : '';
+                const topic = row[3] ? row[3].replace(/"/g, '').trim() : '';
+                const audience = row[4] ? row[4].replace(/"/g, '').trim() : '';
+                
+                if(!date) continue;
+
+                if(!groupedSchedule[date]) groupedSchedule[date] = [];
+                groupedSchedule[date].push({ time, lecturer, topic, audience });
+            }
+
+            const container = document.getElementById('scheduleContainer');
+            container.innerHTML = '';
+
+            for (const [date, events] of Object.entries(groupedSchedule)) {
+                let eventsHTML = '';
+                
+                events.forEach(ev => {
+                    // זיהוי שורת הפסקה
+                    if(ev.topic.includes('הפסקה')) {
+                        eventsHTML += `
+                            <div class="flex items-center gap-4 bg-slate-100 p-3 rounded-lg border border-slate-200 opacity-80">
+                                <span class="font-bold text-slate-500 min-w-[50px] text-left" dir="ltr">${ev.time}</span>
+                                <div class="w-px h-6 bg-slate-300"></div>
+                                <span class="font-bold text-slate-500 flex-grow text-center">☕ הפסקה</span>
+                            </div>
+                        `;
+                    } else {
+                        // בחירת צבע התגית לפי קהל היעד
+                        let badgeColor = "bg-gray-100 text-gray-800";
+                        if(ev.audience === "זוגי") badgeColor = "bg-purple-100 text-purple-800 border-purple-200";
+                        if(ev.audience === "נשים") badgeColor = "bg-pink-100 text-pink-800 border-pink-200";
+                        if(ev.audience === "גברים") badgeColor = "bg-teal-100 text-teal-800 border-teal-200";
+
+                        eventsHTML += `
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-4 bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition">
+                                <span class="font-bold text-[#d4af37] min-w-[50px] text-xl" dir="ltr">${ev.time}</span>
+                                <div class="hidden sm:block w-px h-10 bg-gray-200"></div>
+                                <div class="flex-grow">
+                                    <h4 class="font-bold text-lg text-slate-800">${ev.topic}</h4>
+                                    <p class="text-sm text-gray-500 flex items-center gap-1 mt-1">👤 ${ev.lecturer}</p>
+                                </div>
+                                <span class="border ${badgeColor} text-xs font-bold px-3 py-1 rounded-full text-center whitespace-nowrap self-start sm:self-center">
+                                    ${ev.audience}
+                                </span>
+                            </div>
+                        `;
+                    }
+                });
+
+                // בניית הכרטיס של התאריך כולו
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+                        <div class="bg-[#0f172a] text-[#d4af37] px-6 py-4 border-b-4 border-[#d4af37]">
+                            <h3 class="text-xl font-bold flex items-center gap-2">📅 ${date}</h3>
+                        </div>
+                        <div class="p-6 space-y-3 bg-gray-50">
+                            ${eventsHTML}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // הפעלת שתי הקריאות
+        fetchExplorerData();
+        fetchScheduleData();
     </script>
 </body>
 </html>
