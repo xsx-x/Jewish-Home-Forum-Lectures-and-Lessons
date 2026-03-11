@@ -9,23 +9,13 @@
         :root { --primary-dark: #0f172a; --accent-gold: #d4af37; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* מעבר בין דפים */
         .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* עיצוב אריחים (כרטיסיות) */
-        .tile-card {
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .tile-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-            border-color: var(--accent-gold);
-        }
+        .tile-card { transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .tile-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: var(--accent-gold); }
         
-        /* סרגל גלילה מעוצב לנתיב התיקיות */
         .breadcrumbs-scroll::-webkit-scrollbar { height: 6px; }
         .breadcrumbs-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
     </style>
@@ -48,10 +38,9 @@
 
     <main class="container mx-auto px-4 py-8 flex-grow">
         
-        <!-- דף סייר השיעורים (ראשי) -->
+        <!-- דף סייר השיעורים -->
         <div id="library" class="tab-content active">
             
-            <!-- באנר ברוכים הבאים -->
             <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 mb-8 text-white shadow-md flex flex-col md:flex-row items-center justify-between border-r-4 border-[#d4af37]">
                 <div class="mb-4 md:mb-0">
                     <h2 class="text-2xl font-bold text-[#d4af37] mb-2">ברוכים הבאים לאוצר השיעורים של פורום הבית היהודי</h2>
@@ -62,39 +51,31 @@
                 </button>
             </div>
 
-            <!-- אזור חיפוש וסינון חכם -->
+            <!-- אזור חיפוש וסינון רבנים -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-3">
                 <div class="relative flex-grow">
                     <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">🔍</span>
-                    <input type="text" id="searchInput" placeholder="חיפוש חופשי בכל מאגר השיעורים..." 
+                    <input type="text" id="searchInput" placeholder="חיפוש חופשי (שם רב, נושא, או שיעור)..." 
                            class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none bg-gray-50 transition">
                 </div>
-                <select id="typeFilter" class="py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] outline-none bg-gray-50 min-w-[150px]">
-                    <option value="">כל סוגי המדיה</option>
-                    <option value="וידאו">🎥 וידאו בלבד</option>
-                    <option value="שמע">🎧 שמע בלבד</option>
-                    <option value="טקסט">📄 סיכומים וטקסט</option>
+                <select id="rabbiFilter" class="py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] outline-none bg-gray-50 min-w-[200px]">
+                    <option value="">כל הרבנים</option>
+                    <!-- יתמלא אוטומטית -->
                 </select>
             </div>
 
-            <!-- אזור התצוגה המרכזי -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 min-h-[400px]">
                 
-                <!-- נתיב ניווט (Breadcrumbs) - יוסתר בזמן חיפוש -->
                 <div id="breadcrumbsContainer" class="mb-6 pb-4 border-b border-gray-100 flex items-center gap-2 overflow-x-auto whitespace-nowrap breadcrumbs-scroll text-sm md:text-base">
                     טוען נתונים מאוצר השיעורים...
                 </div>
 
-                <!-- כותרת תוצאות חיפוש (תוסתר בזמן ניווט רגיל) -->
                 <div id="searchResultsHeader" class="hidden mb-6 pb-4 border-b border-gray-100">
                     <h3 class="text-lg font-bold text-slate-800">תוצאות חיפוש: <span id="searchCount" class="text-[#d4af37]"></span></h3>
                     <button onclick="clearSearch()" class="text-sm text-blue-600 hover:underline mt-1">חזור לסייר התיקיות</button>
                 </div>
 
-                <!-- רשת האריחים (Grid) -->
-                <div id="explorerGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-                    <!-- יתמלא אוטומטית ע"י JavaScript -->
-                </div>
+                <div id="explorerGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5"></div>
             </div>
         </div>
 
@@ -107,25 +88,18 @@
                         <span class="absolute -bottom-3 right-0 w-1/2 h-1.5 bg-[#d4af37] rounded-full"></span>
                     </h2>
                 </div>
-                
                 <div class="prose prose-lg text-gray-700 space-y-6">
                     <p class="text-xl leading-relaxed">ברוכים הבאים למערכת השיעורים של פורום הבית היהודי, העומד בנשיאותו של <strong>הרה"ג ר' עמרם פריד שליט"א</strong>.</p>
-                    <p>באתר זה מאוגדים מאות שיעורים, הרצאות וסיכומים, המסודרים בצורה נוחה וקלה לגישה.</p>
-                    
                     <div class="bg-slate-50 p-8 rounded-xl border border-slate-200 mt-8 shadow-sm">
                         <div class="flex items-center gap-3 mb-4">
                             <span class="text-3xl">💎</span>
                             <h4 class="font-bold text-2xl text-[#0f172a]">מסלול מנויים</h4>
                         </div>
-                        <p class="mb-4 text-gray-600">הצטרפו לפורום וקבלו גישה מלאה ובלתי מוגבלת לכל אוצרות התוכן:</p>
-                        <ul class="space-y-3 mb-8">
-                            <li class="flex items-center gap-2"><span class="text-green-500 font-bold">✓</span> גישה חופשית לכל שיעורי הוידאו</li>
-                            <li class="flex items-center gap-2"><span class="text-green-500 font-bold">✓</span> האזנה לכל קבצי השמע</li>
+                        <ul class="space-y-3 mb-8 text-gray-600">
+                            <li class="flex items-center gap-2"><span class="text-green-500 font-bold">✓</span> גישה חופשית לכל שיעורי הוידאו והשמע</li>
                             <li class="flex items-center gap-2"><span class="text-green-500 font-bold">✓</span> צפייה והורדה של סיכומים כתובים</li>
                         </ul>
-                        
-                        <!-- כפתור יצירת קשר / תשלום -->
-                        <a href="#" class="block w-full text-center bg-[#0f172a] hover:bg-slate-800 text-white font-bold py-4 px-6 rounded-xl transition duration-300 text-lg shadow-md border-b-4 border-[#d4af37]">
+                        <a href="#" class="block w-full text-center bg-[#0f172a] hover:bg-slate-800 text-white font-bold py-4 px-6 rounded-xl shadow-md border-b-4 border-[#d4af37]">
                             להצטרפות ותשלום מאובטח
                         </a>
                     </div>
@@ -135,7 +109,6 @@
 
     </main>
 
-    <!-- תחתית האתר (Footer) קטנה ומקצועית -->
     <footer class="mt-auto border-t border-gray-200 bg-white">
         <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center text-[11px] text-gray-400 uppercase tracking-widest font-medium">
             <p>© כל הזכויות שמורות לפורום הבית היהודי</p>
@@ -148,31 +121,25 @@
 
     <script>
         // ==========================================
-        // הדבק כאן את הקישור מפרסום האקסל (CSV)
-        // ==========================================
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?output=csv';        
-        
+        // ==========================================
+
         let fileSystem = { name: "ראשי", type: "folder", children: {} };
         let currentPathArr = []; 
-        let allFilesList = []; // רשימה שטוחה לטובת חיפוש בכל הדרייב
+        let allSearchableItems = []; // יכיל גם קבצים וגם תיקיות לטובת חיפוש
 
-        // החלפת טאבים
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             
-            // שינוי צבעי הכפתורים בתפריט
             const btns = document.querySelectorAll('.nav-btn');
-            btns.forEach(btn => {
-                btn.className = "nav-btn px-6 py-2 rounded-md transition font-medium text-white hover:bg-slate-700";
-            });
+            btns.forEach(btn => btn.className = "nav-btn px-6 py-2 rounded-md transition font-medium text-white hover:bg-slate-700");
             event.target.className = "nav-btn px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm";
         }
 
-        // טעינת הנתונים
         async function fetchDriveData() {
             if(SHEET_CSV_URL === 'כאן_מדביקים_את_הקישור_מגוגל_שיטס') {
-                document.getElementById('breadcrumbsContainer').innerHTML = '<span class="text-red-500 font-bold px-4 py-2 bg-red-50 rounded">שגיאה: חסר קישור CSV בקוד האתר.</span>';
+                document.getElementById('breadcrumbsContainer').innerHTML = '<span class="text-red-500 font-bold">חסר קישור CSV בקוד האתר.</span>';
                 return;
             }
             try {
@@ -181,16 +148,18 @@
                 buildFileSystem(data);
             } catch (error) {
                 console.error(error);
-                document.getElementById('breadcrumbsContainer').innerHTML = '<span class="text-red-500">אירעה שגיאה בטעינת הנתונים. רענן את העמוד.</span>';
             }
         }
 
-        // בניית עץ התיקיות ורשימת החיפוש
         function buildFileSystem(csvText) {
             const lines = csvText.split('\n');
             fileSystem.children = {}; 
-            allFilesList = [];
+            allSearchableItems = [];
             
+            // סט לשמירת שמות רבנים ייחודיים
+            let rabbisSet = new Set();
+
+            // מעבר על השורות. אינדקס 5 הוא שם הרב
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i].trim()) continue;
                 
@@ -200,38 +169,60 @@
                 const type = row[2] ? row[2].replace(/"/g, '').trim() : '';
                 const link = row[3] ? row[3].replace(/"/g, '').trim() : '';
                 const access = row[4] ? row[4].replace(/"/g, '').trim() : '';
+                const rabbi = row[5] ? row[5].replace(/"/g, '').trim() : '';
                 
                 if(!pathStr || !fileName) continue;
+                if(rabbi) rabbisSet.add(rabbi);
 
-                const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr };
-                allFilesList.push(fileObj); // שמירה לחיפוש הגלובלי
-
-                // יצירת עץ תיקיות
+                // בניית עץ התיקיות
                 const folders = pathStr.split('/');
                 let currentNode = fileSystem;
+                let currentPathBuild = [];
+
                 let startIndex = folders[0] === "ראשי" ? 1 : 0;
+                if(folders[0] === "ראשי") currentPathBuild.push("ראשי");
 
                 for (let j = startIndex; j < folders.length; j++) {
                     let folderName = folders[j];
+                    currentPathBuild.push(folderName);
+
                     if (!currentNode.children[folderName]) {
-                        currentNode.children[folderName] = { name: folderName, type: "folder", children: {} };
+                        const newFolder = { 
+                            name: folderName, 
+                            type: "folder", 
+                            pathArr: [...currentPathBuild], // שומר את הנתיב כדי שאפשר יהיה לקפוץ אליו מהחיפוש
+                            rabbi: rabbi,
+                            children: {} 
+                        };
+                        currentNode.children[folderName] = newFolder;
+                        
+                        // נוסיף את התיקייה עצמה למאגר החיפוש רק פעם אחת
+                        const exists = allSearchableItems.find(item => item.type === "folder" && item.pathArr.join('/') === newFolder.pathArr.join('/'));
+                        if(!exists) allSearchableItems.push(newFolder);
                     }
                     currentNode = currentNode.children[folderName];
                 }
+                
+                // הוספת הקובץ
+                const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr, rabbi: rabbi };
                 currentNode.children[fileName] = fileObj;
+                allSearchableItems.push(fileObj);
             }
             
+            // מילוי תיבת הסינון ברבנים
+            const rabbiSelect = document.getElementById('rabbiFilter');
+            rabbisSet.forEach(r => {
+                rabbiSelect.innerHTML += `<option value="${r}">${r}</option>`;
+            });
+
             renderCurrentFolder();
         }
 
-        // ניווט בנתיב
+        // ניווט רגיל
         function navigateTo(index) {
-            clearSearch(); // מנקה חיפוש אם היה
-            if (index === -1) {
-                currentPathArr = []; 
-            } else {
-                currentPathArr = currentPathArr.slice(0, index + 1);
-            }
+            clearSearch(false);
+            if (index === -1) currentPathArr = []; 
+            else currentPathArr = currentPathArr.slice(0, index + 1);
             renderCurrentFolder();
         }
 
@@ -240,16 +231,23 @@
             renderCurrentFolder();
         }
 
-        // ציור התיקייה הנוכחית (תצוגת האריחים)
+        // פונקציה מיוחדת לקפיצה לתיקייה מתוך תוצאות החיפוש
+        function jumpToFolderFromSearch(pathString) {
+            const pathArray = pathString.split('||');
+            // מסירים את המילה "ראשי" כי המערכת מניחה אותה כברירת מחדל
+            if(pathArray[0] === "ראשי") pathArray.shift(); 
+            
+            currentPathArr = pathArray;
+            clearSearch(false);
+            renderCurrentFolder();
+        }
+
         function renderCurrentFolder() {
             let currentNode = fileSystem;
             for (let folder of currentPathArr) {
-                if(currentNode.children[folder]) {
-                    currentNode = currentNode.children[folder];
-                }
+                if(currentNode.children[folder]) currentNode = currentNode.children[folder];
             }
 
-            // עדכון סרגל הניווט (Breadcrumbs)
             const breadcrumbsDiv = document.getElementById('breadcrumbsContainer');
             let breadcrumbsHTML = `<button onclick="navigateTo(-1)" class="hover:text-blue-600 font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="text-lg">🏠</span> ראשי</button>`;
             
@@ -263,13 +261,12 @@
             drawGrid(items);
         }
 
-        // פונקציה שמציירת את האריחים בפועל
         function drawGrid(items) {
             const gridDiv = document.getElementById('explorerGrid');
             gridDiv.innerHTML = '';
 
             if (items.length === 0) {
-                gridDiv.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 font-medium text-lg">תיקייה זו ריקה 📂</div>';
+                gridDiv.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 font-medium text-lg">אין קבצים או תיקיות תואמים.</div>';
                 return;
             }
 
@@ -282,15 +279,16 @@
 
             items.forEach(item => {
                 if (item.type === "folder") {
-                    // אריח של תיקייה
+                    // המרה של מערך הנתיב למחרוזת כדי להעביר אותו לכפתור
+                    const pathStr = item.pathArr ? item.pathArr.join('||') : item.name;
+                    
                     gridDiv.innerHTML += `
-                        <div onclick="openFolder('${item.name}')" class="tile-card bg-slate-50 rounded-xl p-5 border border-slate-200 cursor-pointer flex flex-col items-center justify-center text-center aspect-[4/3]">
+                        <div onclick="jumpToFolderFromSearch('${pathStr}')" class="tile-card bg-slate-50 rounded-xl p-5 border border-slate-200 cursor-pointer flex flex-col items-center justify-center text-center aspect-[4/3] relative">
                             <span class="text-5xl mb-3 drop-shadow-sm">📁</span>
                             <span class="font-bold text-slate-800 line-clamp-2">${item.name}</span>
                         </div>
                     `;
                 } else {
-                    // אריח של קובץ
                     let icon = "📄"; let iconColor = "text-gray-500"; let bgColor = "bg-gray-50";
                     if(item.type === "וידאו") { icon = "🎥"; iconColor = "text-blue-600"; bgColor = "bg-blue-50"; }
                     if(item.type === "שמע") { icon = "🎧"; iconColor = "text-purple-600"; bgColor = "bg-purple-50"; }
@@ -300,7 +298,6 @@
                     const badgeIcon = isPremium ? "🔒" : "🔓";
                     const badgeText = isPremium ? "מנויים" : "פתוח";
 
-                    // אם זה תוצאת חיפוש, מציג גם איפה הקובץ נמצא
                     const pathHint = item.path ? `<p class="text-[10px] text-gray-400 mt-2 truncate w-full px-2" dir="ltr">${item.path}</p>` : '';
 
                     gridDiv.innerHTML += `
@@ -324,49 +321,45 @@
             });
         }
 
-        // --- מערכת חיפוש חכמה (סורקת את כל הדרייב) ---
         function handleSearch() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            const typeTerm = document.getElementById('typeFilter').value;
+            const selectedRabbi = document.getElementById('rabbiFilter').value;
 
             const breadcrumbs = document.getElementById('breadcrumbsContainer');
             const searchHeader = document.getElementById('searchResultsHeader');
 
-            // אם שורת החיפוש והסינון ריקים - חוזרים לתצוגת תיקיות רגילה
-            if (searchTerm === "" && typeTerm === "") {
+            if (searchTerm === "" && selectedRabbi === "") {
                 breadcrumbs.classList.remove('hidden');
                 searchHeader.classList.add('hidden');
                 renderCurrentFolder();
                 return;
             }
 
-            // הסתרת הנתיב והצגת כותרת החיפוש
             breadcrumbs.classList.add('hidden');
             searchHeader.classList.remove('hidden');
 
-            // סינון מתוך רשימת כל הקבצים
-            const results = allFilesList.filter(file => {
-                const matchName = file.name.toLowerCase().includes(searchTerm) || file.path.toLowerCase().includes(searchTerm);
-                const matchType = typeTerm === "" || file.type === typeTerm;
-                return matchName && matchType;
+            const results = allSearchableItems.filter(item => {
+                const searchString = item.type === "folder" ? item.name : (item.name + " " + item.path);
+                const matchName = searchString.toLowerCase().includes(searchTerm);
+                const matchRabbi = selectedRabbi === "" || (item.rabbi && item.rabbi === selectedRabbi);
+                return matchName && matchRabbi;
             });
 
-            document.getElementById('searchCount').innerText = `${results.length} קבצים נמצאו`;
+            document.getElementById('searchCount').innerText = `${results.length} תוצאות נמצאו`;
             drawGrid(results);
         }
 
-        // ניקוי החיפוש וחזרה לסייר
-        function clearSearch() {
+        function clearSearch(render = true) {
             document.getElementById('searchInput').value = "";
-            document.getElementById('typeFilter').value = "";
-            handleSearch(); // יחזיר אותנו לתיקייה הנוכחית אוטומטית
+            document.getElementById('rabbiFilter').value = "";
+            document.getElementById('breadcrumbsContainer').classList.remove('hidden');
+            document.getElementById('searchResultsHeader').classList.add('hidden');
+            if(render) renderCurrentFolder();
         }
 
-        // האזנה להקלדה בחיפוש ולשינוי בסינון
         document.getElementById('searchInput').addEventListener('input', handleSearch);
-        document.getElementById('typeFilter').addEventListener('change', handleSearch);
+        document.getElementById('rabbiFilter').addEventListener('change', handleSearch);
 
-        // טעינה ראשונית
         fetchDriveData();
     </script>
 </body>
