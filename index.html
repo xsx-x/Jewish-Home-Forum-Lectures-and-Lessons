@@ -7,77 +7,125 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --primary-dark: #0f172a; --accent-gold: #d4af37; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* מעבר בין דפים */
         .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* עיצוב פריטי סייר הקבצים */
-        .explorer-item { transition: all 0.2s; }
-        .explorer-item:hover { background-color: #f1f5f9; border-color: var(--accent-gold); }
+        /* עיצוב אריחים (כרטיסיות) */
+        .tile-card {
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .tile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            border-color: var(--accent-gold);
+        }
+        
+        /* סרגל גלילה מעוצב לנתיב התיקיות */
+        .breadcrumbs-scroll::-webkit-scrollbar { height: 6px; }
+        .breadcrumbs-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="text-slate-800 flex flex-col min-h-screen">
+<body class="text-slate-800">
 
     <!-- סרגל עליון -->
     <header class="bg-[#0f172a] text-white shadow-lg border-b-4 border-[#d4af37]">
         <div class="container mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center">
             <div class="text-center md:text-right mb-4 md:mb-0">
                 <h1 class="text-3xl font-bold text-[#d4af37]">פורום הבית היהודי</h1>
-                <p class="text-sm text-gray-300 mt-1">בנשיאות הרה"ג ר' עמרם פריד שליט"א</p>
+                <p class="text-sm text-gray-300 mt-1 tracking-wide">בנשיאות הרה"ג ר' עמרם פריד שליט"א</p>
             </div>
-            <nav class="flex space-x-4 space-x-reverse">
-                <button onclick="switchTab('library')" class="nav-btn px-4 py-2 rounded-md hover:bg-slate-700 transition font-medium text-[#d4af37]">סייר השיעורים</button>
-                <button onclick="switchTab('about')" class="nav-btn px-4 py-2 rounded-md hover:bg-slate-700 transition font-medium">אודות והרשמה</button>
+            <nav class="flex space-x-4 space-x-reverse bg-slate-800 p-1 rounded-lg">
+                <button onclick="switchTab('library')" class="nav-btn px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm">סייר השיעורים</button>
+                <button onclick="switchTab('about')" class="nav-btn px-6 py-2 rounded-md hover:bg-slate-700 transition font-medium text-white">אודות והרשמה</button>
             </nav>
         </div>
     </header>
 
     <main class="container mx-auto px-4 py-8 flex-grow">
         
-        <!-- דף סייר השיעורים -->
+        <!-- דף סייר השיעורים (ראשי) -->
         <div id="library" class="tab-content active">
             
-            <!-- באנר ברוכים הבאים שביקשת -->
-            <div class="bg-gradient-to-r from-[#0f172a] to-slate-800 rounded-xl p-6 mb-8 text-white shadow-lg flex flex-col md:flex-row items-center justify-between border-r-4 border-[#d4af37]">
+            <!-- באנר ברוכים הבאים -->
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 mb-8 text-white shadow-md flex flex-col md:flex-row items-center justify-between border-r-4 border-[#d4af37]">
                 <div class="mb-4 md:mb-0">
-                    <h2 class="text-2xl font-bold text-[#d4af37] mb-1">ברוכים הבאים לאוצר השיעורים של פורום הבית היהודי</h2>
-                    <p class="text-gray-300">התכנים פתוחים רק לחברים בפורום. להצטרפות לחצו כאן מעבר לדף.</p>
+                    <h2 class="text-2xl font-bold text-[#d4af37] mb-2">ברוכים הבאים לאוצר השיעורים של פורום הבית היהודי</h2>
+                    <p class="text-gray-300">התכנים המלאים פתוחים רק לחברים בפורום. להצטרפות וגישה מלאה לחצו כאן.</p>
                 </div>
-                <button onclick="switchTab('about')" class="bg-[#d4af37] hover:bg-[#b5952f] text-[#0f172a] font-bold py-2 px-6 rounded-lg transition duration-300 whitespace-nowrap shadow-md">
-                    לפרטים והצטרפות
+                <button onclick="switchTab('about')" class="bg-[#d4af37] hover:bg-[#b5952f] text-[#0f172a] font-bold py-3 px-8 rounded-xl transition duration-300 whitespace-nowrap shadow-lg flex items-center gap-2">
+                    לפרטים והצטרפות <span>←</span>
                 </button>
             </div>
 
-            <!-- סייר הקבצים (File Explorer) -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <!-- נתיב ניווט (Breadcrumbs) -->
-                <div class="bg-slate-100 p-4 border-b border-gray-200 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-sm md:text-base" id="breadcrumbs">
-                    <!-- יתמלא אוטומטית -->
-                    טוען נתונים מהדרייב...
+            <!-- אזור חיפוש וסינון חכם -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-3">
+                <div class="relative flex-grow">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">🔍</span>
+                    <input type="text" id="searchInput" placeholder="חיפוש חופשי בכל מאגר השיעורים..." 
+                           class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none bg-gray-50 transition">
+                </div>
+                <select id="typeFilter" class="py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4af37] outline-none bg-gray-50 min-w-[150px]">
+                    <option value="">כל סוגי המדיה</option>
+                    <option value="וידאו">🎥 וידאו בלבד</option>
+                    <option value="שמע">🎧 שמע בלבד</option>
+                    <option value="טקסט">📄 סיכומים וטקסט</option>
+                </select>
+            </div>
+
+            <!-- אזור התצוגה המרכזי -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 min-h-[400px]">
+                
+                <!-- נתיב ניווט (Breadcrumbs) - יוסתר בזמן חיפוש -->
+                <div id="breadcrumbsContainer" class="mb-6 pb-4 border-b border-gray-100 flex items-center gap-2 overflow-x-auto whitespace-nowrap breadcrumbs-scroll text-sm md:text-base">
+                    טוען נתונים מאוצר השיעורים...
                 </div>
 
-                <!-- רשימת התיקיות והקבצים -->
-                <div id="explorerList" class="divide-y divide-gray-100">
-                    <!-- יתמלא אוטומטית -->
+                <!-- כותרת תוצאות חיפוש (תוסתר בזמן ניווט רגיל) -->
+                <div id="searchResultsHeader" class="hidden mb-6 pb-4 border-b border-gray-100">
+                    <h3 class="text-lg font-bold text-slate-800">תוצאות חיפוש: <span id="searchCount" class="text-[#d4af37]"></span></h3>
+                    <button onclick="clearSearch()" class="text-sm text-blue-600 hover:underline mt-1">חזור לסייר התיקיות</button>
+                </div>
+
+                <!-- רשת האריחים (Grid) -->
+                <div id="explorerGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+                    <!-- יתמלא אוטומטית ע"י JavaScript -->
                 </div>
             </div>
         </div>
 
         <!-- דף אודות והרשמה -->
         <div id="about" class="tab-content">
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-4xl mx-auto">
-                <h2 class="text-3xl font-bold text-[#0f172a] mb-6 border-b-2 border-[#d4af37] inline-block pb-2">אודות והרשמה למסלול</h2>
-                <div class="prose prose-lg text-gray-700 space-y-4">
-                    <p>ברוכים הבאים למערכת השיעורים של פורום הבית היהודי, העומד בנשיאותו של <strong>הרה"ג ר' עמרם פריד שליט"א</strong>.</p>
-                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200 mt-4">
-                        <h4 class="font-bold text-lg mb-2">מסלול מנויים:</h4>
-                        <ul class="list-disc list-inside space-y-2 mb-4">
-                            <li>גישה חופשית לכל שיעורי הוידאו והשמע</li>
-                            <li>גישה למאמרי סיכום כתובים</li>
+            <div class="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-100 max-w-4xl mx-auto">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#0f172a] inline-block relative">
+                        אודות והרשמה
+                        <span class="absolute -bottom-3 right-0 w-1/2 h-1.5 bg-[#d4af37] rounded-full"></span>
+                    </h2>
+                </div>
+                
+                <div class="prose prose-lg text-gray-700 space-y-6">
+                    <p class="text-xl leading-relaxed">ברוכים הבאים למערכת השיעורים של פורום הבית היהודי, העומד בנשיאותו של <strong>הרה"ג ר' עמרם פריד שליט"א</strong>.</p>
+                    <p>באתר זה מאוגדים מאות שיעורים, הרצאות וסיכומים, המסודרים בצורה נוחה וקלה לגישה.</p>
+                    
+                    <div class="bg-slate-50 p-8 rounded-xl border border-slate-200 mt-8 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-3xl">💎</span>
+                            <h4 class="font-bold text-2xl text-[#0f172a]">מסלול מנויים</h4>
+                        </div>
+                        <p class="mb-4 text-gray-600">הצטרפו לפורום וקבלו גישה מלאה ובלתי מוגבלת לכל אוצרות התוכן:</p>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-center gap-2"><span class="text-green-500 font-bold">✓</span> גישה חופשית לכל שיעורי הוידאו</li>
+                            <li class="flex items-center gap-2"><span class="text-green-500 font-bold">✓</span> האזנה לכל קבצי השמע</li>
+                            <li class="flex items-center gap-2"><span class="text-green-500 font-bold">✓</span> צפייה והורדה של סיכומים כתובים</li>
                         </ul>
+                        
                         <!-- כפתור יצירת קשר / תשלום -->
-                        <a href="#" class="mt-4 inline-block bg-[#d4af37] hover:bg-[#b5952f] text-[#0f172a] font-bold py-3 px-6 rounded-lg transition duration-300">
+                        <a href="#" class="block w-full text-center bg-[#0f172a] hover:bg-slate-800 text-white font-bold py-4 px-6 rounded-xl transition duration-300 text-lg shadow-md border-b-4 border-[#d4af37]">
                             להצטרפות ותשלום מאובטח
                         </a>
                     </div>
@@ -87,14 +135,13 @@
 
     </main>
 
-    <!-- תחתית האתר שביקשת -->
-    <footer class="bg-slate-100 border-t border-slate-200 mt-auto py-6 text-center">
-        <div class="container mx-auto px-4">
-            <p class="text-slate-600 font-medium">
-                נבנה על ידי <span class="text-[#0f172a] font-bold">לב טוב</span>
-            </p>
-            <p class="text-sm text-slate-500 mt-2">
-                ליצירת קשר: <a href="mailto:הכנס_כאן_את_המייל_שלך@gmail.com" class="text-blue-600 hover:underline">הכנס_כאן_את_המייל_שלך@gmail.com</a>
+    <!-- תחתית האתר (Footer) קטנה ומקצועית -->
+    <footer class="mt-auto border-t border-gray-200 bg-white">
+        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center text-[11px] text-gray-400 uppercase tracking-widest font-medium">
+            <p>© כל הזכויות שמורות לפורום הבית היהודי</p>
+            <p class="mt-2 md:mt-0">
+                נבנה על ידי <span class="text-gray-600 font-bold">לב טוב</span> | 
+                <a href="mailto:הכנס_כאן_את_המייל_שלך@gmail.com" class="hover:text-[#d4af37] transition">הכנס_כאן_את_המייל_שלך@gmail.com</a>
             </p>
         </div>
     </footer>
@@ -103,23 +150,30 @@
         // ==========================================
         // הדבק כאן את הקישור מפרסום האקסל (CSV)
         // ==========================================
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?output=csv';        
+        const SHEET_CSV_URL = 'כאן_מדביקים_את_הקישור_מגוגל_שיטס';
         
         let fileSystem = { name: "ראשי", type: "folder", children: {} };
-        let currentPathArr = []; // המערך שומר איפה אנחנו נמצאים בתוך התיקיות
+        let currentPathArr = []; 
+        let allFilesList = []; // רשימה שטוחה לטובת חיפוש בכל הדרייב
 
-        // מעבר בין דפים (טאבים)
+        // החלפת טאבים
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('text-[#d4af37]'));
-            event.target.classList.add('text-[#d4af37]');
+            
+            // שינוי צבעי הכפתורים בתפריט
+            const btns = document.querySelectorAll('.nav-btn');
+            btns.forEach(btn => {
+                btn.className = "nav-btn px-6 py-2 rounded-md transition font-medium text-white hover:bg-slate-700";
+            });
+            event.target.className = "nav-btn px-6 py-2 rounded-md transition font-medium bg-[#d4af37] text-[#0f172a] shadow-sm";
         }
 
-        // טעינת הנתונים מגוגל שיטס
+        // טעינת הנתונים
         async function fetchDriveData() {
-            if(SHEET_CSV_URL === 'כאן_מדביקים_את_הקישור_מגוגל_שיטס') {
-                document.getElementById('breadcrumbs').innerHTML = '<span class="text-red-500 font-bold">שגיאה: חסר קישור CSV בקוד.</span>';
+            if(SHEET_CSV_URL === '        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRta6pAKN4hKrPjrpcv2lrenuhOw9U0qiXeXf79wdFUsW1JpVjD1-3aHMPs2GuV7q3SKDZln3yKFnws/pub?output=csv';        
+') {
+                document.getElementById('breadcrumbsContainer').innerHTML = '<span class="text-red-500 font-bold px-4 py-2 bg-red-50 rounded">שגיאה: חסר קישור CSV בקוד האתר.</span>';
                 return;
             }
             try {
@@ -128,21 +182,20 @@
                 buildFileSystem(data);
             } catch (error) {
                 console.error(error);
-                document.getElementById('breadcrumbs').innerHTML = '<span class="text-red-500">אירעה שגיאה בטעינת התיקיות.</span>';
+                document.getElementById('breadcrumbsContainer').innerHTML = '<span class="text-red-500">אירעה שגיאה בטעינת הנתונים. רענן את העמוד.</span>';
             }
         }
 
-        // בניית ה"כונן הוירטואלי" מתוך שורות האקסל
+        // בניית עץ התיקיות ורשימת החיפוש
         function buildFileSystem(csvText) {
             const lines = csvText.split('\n');
-            fileSystem.children = {}; // איפוס
+            fileSystem.children = {}; 
+            allFilesList = [];
             
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i].trim()) continue;
                 
-                // פיצול לפי פסיקים (התעלמות מפסיקים בתוך מירכאות)
                 const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                
                 const pathStr = row[0] ? row[0].replace(/"/g, '').trim() : '';
                 const fileName = row[1] ? row[1].replace(/"/g, '').trim() : '';
                 const type = row[2] ? row[2].replace(/"/g, '').trim() : '';
@@ -151,11 +204,12 @@
                 
                 if(!pathStr || !fileName) continue;
 
-                // יצירת מבנה התיקיות
+                const fileObj = { name: fileName, type: type, link: link, access: access, path: pathStr };
+                allFilesList.push(fileObj); // שמירה לחיפוש הגלובלי
+
+                // יצירת עץ תיקיות
                 const folders = pathStr.split('/');
                 let currentNode = fileSystem;
-                
-                // מדלגים על המילה "ראשי" אם היא הראשונה, כי היא כבר השורש שלנו
                 let startIndex = folders[0] === "ראשי" ? 1 : 0;
 
                 for (let j = startIndex; j < folders.length; j++) {
@@ -165,60 +219,62 @@
                     }
                     currentNode = currentNode.children[folderName];
                 }
-                
-                // הכנסת הקובץ לתוך התיקייה הסופית
-                currentNode.children[fileName] = { name: fileName, type: type, link: link, access: access };
+                currentNode.children[fileName] = fileObj;
             }
             
-            // הצגת תיקיית השורש
             renderCurrentFolder();
         }
 
-        // ניווט לתיקייה ספציפית לפי המיקום שלה בנתיב
+        // ניווט בנתיב
         function navigateTo(index) {
+            clearSearch(); // מנקה חיפוש אם היה
             if (index === -1) {
-                currentPathArr = []; // חזרה לראשי
+                currentPathArr = []; 
             } else {
                 currentPathArr = currentPathArr.slice(0, index + 1);
             }
             renderCurrentFolder();
         }
 
-        // פתיחת תיקייה
         function openFolder(folderName) {
             currentPathArr.push(folderName);
             renderCurrentFolder();
         }
 
-        // מציאת התיקייה הנוכחית בתוך העץ וציור התוכן שלה
+        // ציור התיקייה הנוכחית (תצוגת האריחים)
         function renderCurrentFolder() {
             let currentNode = fileSystem;
             for (let folder of currentPathArr) {
-                currentNode = currentNode.children[folder];
+                if(currentNode.children[folder]) {
+                    currentNode = currentNode.children[folder];
+                }
             }
 
-            // 1. ציור נתיב הניווט (Breadcrumbs)
-            const breadcrumbsDiv = document.getElementById('breadcrumbs');
-            let breadcrumbsHTML = `<button onclick="navigateTo(-1)" class="hover:text-blue-600 font-medium">🏠 ראשי</button>`;
+            // עדכון סרגל הניווט (Breadcrumbs)
+            const breadcrumbsDiv = document.getElementById('breadcrumbsContainer');
+            let breadcrumbsHTML = `<button onclick="navigateTo(-1)" class="hover:text-blue-600 font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="text-lg">🏠</span> ראשי</button>`;
             
             currentPathArr.forEach((folder, index) => {
-                breadcrumbsHTML += `<span class="text-gray-400 mx-2">/</span>`;
-                breadcrumbsHTML += `<button onclick="navigateTo(${index})" class="hover:text-blue-600 font-medium">${folder}</button>`;
+                breadcrumbsHTML += `<span class="text-gray-300 font-bold">/</span>`;
+                breadcrumbsHTML += `<button onclick="navigateTo(${index})" class="hover:text-blue-600 font-medium hover:bg-slate-50 px-2 py-1 rounded transition">${folder}</button>`;
             });
             breadcrumbsDiv.innerHTML = breadcrumbsHTML;
 
-            // 2. ציור רשימת הקבצים והתיקיות
-            const listDiv = document.getElementById('explorerList');
-            listDiv.innerHTML = '';
-
             const items = Object.values(currentNode.children);
-            
+            drawGrid(items);
+        }
+
+        // פונקציה שמציירת את האריחים בפועל
+        function drawGrid(items) {
+            const gridDiv = document.getElementById('explorerGrid');
+            gridDiv.innerHTML = '';
+
             if (items.length === 0) {
-                listDiv.innerHTML = '<div class="p-8 text-center text-gray-500">התיקייה ריקה</div>';
+                gridDiv.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 font-medium text-lg">תיקייה זו ריקה 📂</div>';
                 return;
             }
 
-            // סידור: קודם תיקיות, אחר כך קבצים
+            // סידור: תיקיות קודם, ואז קבצים בסדר אלפביתי
             items.sort((a, b) => {
                 if (a.type === "folder" && b.type !== "folder") return -1;
                 if (a.type !== "folder" && b.type === "folder") return 1;
@@ -227,39 +283,91 @@
 
             items.forEach(item => {
                 if (item.type === "folder") {
-                    // פריט מסוג תיקייה
-                    listDiv.innerHTML += `
-                        <div onclick="openFolder('${item.name}')" class="explorer-item p-4 flex items-center cursor-pointer border-l-4 border-transparent">
-                            <span class="text-2xl ml-3">📁</span>
-                            <span class="font-bold text-gray-800">${item.name}</span>
+                    // אריח של תיקייה
+                    gridDiv.innerHTML += `
+                        <div onclick="openFolder('${item.name}')" class="tile-card bg-slate-50 rounded-xl p-5 border border-slate-200 cursor-pointer flex flex-col items-center justify-center text-center aspect-[4/3]">
+                            <span class="text-5xl mb-3 drop-shadow-sm">📁</span>
+                            <span class="font-bold text-slate-800 line-clamp-2">${item.name}</span>
                         </div>
                     `;
                 } else {
-                    // פריט מסוג קובץ (וידאו/שמע/טקסט)
-                    let icon = "📄";
-                    let iconColor = "text-gray-500";
-                    if(item.type === "וידאו") { icon = "🎥"; iconColor = "text-blue-600"; }
-                    if(item.type === "שמע") { icon = "🎧"; iconColor = "text-purple-600"; }
+                    // אריח של קובץ
+                    let icon = "📄"; let iconColor = "text-gray-500"; let bgColor = "bg-gray-50";
+                    if(item.type === "וידאו") { icon = "🎥"; iconColor = "text-blue-600"; bgColor = "bg-blue-50"; }
+                    if(item.type === "שמע") { icon = "🎧"; iconColor = "text-purple-600"; bgColor = "bg-purple-50"; }
                     
-                    const badge = item.access.includes('מנויים') 
-                        ? `<span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full mr-auto">🔒 מנויים</span>` 
-                        : `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-auto">🔓 פתוח</span>`;
+                    const isPremium = item.access.includes('מנויים');
+                    const badgeClass = isPremium ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-green-100 text-green-800 border-green-200";
+                    const badgeIcon = isPremium ? "🔒" : "🔓";
+                    const badgeText = isPremium ? "מנויים" : "פתוח";
 
-                    listDiv.innerHTML += `
-                        <a href="${item.link}" target="_blank" class="explorer-item p-4 flex items-center cursor-pointer border-l-4 border-transparent hover:bg-slate-50">
-                            <span class="text-2xl ml-3 ${iconColor}">${icon}</span>
-                            <div class="flex flex-col">
-                                <span class="font-medium text-gray-800">${item.name}</span>
-                                <span class="text-xs text-gray-400 mt-1">${item.type}</span>
+                    // אם זה תוצאת חיפוש, מציג גם איפה הקובץ נמצא
+                    const pathHint = item.path ? `<p class="text-[10px] text-gray-400 mt-2 truncate w-full px-2" dir="ltr">${item.path}</p>` : '';
+
+                    gridDiv.innerHTML += `
+                        <a href="${item.link}" target="_blank" class="tile-card bg-white rounded-xl border border-gray-200 cursor-pointer flex flex-col relative overflow-hidden h-full">
+                            <div class="h-2 w-full ${isPremium ? 'bg-[#0f172a]' : 'bg-[#d4af37]'}"></div>
+                            
+                            <div class="absolute top-3 right-3 border ${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                                ${badgeIcon} ${badgeText}
                             </div>
-                            ${badge}
+                            
+                            <div class="p-5 flex flex-col items-center flex-grow justify-center text-center mt-4">
+                                <div class="w-16 h-16 rounded-full ${bgColor} flex items-center justify-center mb-4 shadow-sm">
+                                    <span class="text-3xl ${iconColor}">${icon}</span>
+                                </div>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2">${item.name}</h3>
+                                ${pathHint}
+                            </div>
                         </a>
                     `;
                 }
             });
         }
 
-        // הפעלת הטעינה כשהדף עולה
+        // --- מערכת חיפוש חכמה (סורקת את כל הדרייב) ---
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const typeTerm = document.getElementById('typeFilter').value;
+
+            const breadcrumbs = document.getElementById('breadcrumbsContainer');
+            const searchHeader = document.getElementById('searchResultsHeader');
+
+            // אם שורת החיפוש והסינון ריקים - חוזרים לתצוגת תיקיות רגילה
+            if (searchTerm === "" && typeTerm === "") {
+                breadcrumbs.classList.remove('hidden');
+                searchHeader.classList.add('hidden');
+                renderCurrentFolder();
+                return;
+            }
+
+            // הסתרת הנתיב והצגת כותרת החיפוש
+            breadcrumbs.classList.add('hidden');
+            searchHeader.classList.remove('hidden');
+
+            // סינון מתוך רשימת כל הקבצים
+            const results = allFilesList.filter(file => {
+                const matchName = file.name.toLowerCase().includes(searchTerm) || file.path.toLowerCase().includes(searchTerm);
+                const matchType = typeTerm === "" || file.type === typeTerm;
+                return matchName && matchType;
+            });
+
+            document.getElementById('searchCount').innerText = `${results.length} קבצים נמצאו`;
+            drawGrid(results);
+        }
+
+        // ניקוי החיפוש וחזרה לסייר
+        function clearSearch() {
+            document.getElementById('searchInput').value = "";
+            document.getElementById('typeFilter').value = "";
+            handleSearch(); // יחזיר אותנו לתיקייה הנוכחית אוטומטית
+        }
+
+        // האזנה להקלדה בחיפוש ולשינוי בסינון
+        document.getElementById('searchInput').addEventListener('input', handleSearch);
+        document.getElementById('typeFilter').addEventListener('change', handleSearch);
+
+        // טעינה ראשונית
         fetchDriveData();
     </script>
 </body>
